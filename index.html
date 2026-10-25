@@ -1,0 +1,961 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F5EFE6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Heard">
+<title>Heard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --sand:#F5EFE6; --paper:#FBF8F3; --oat:#EBDDCB; --ink:#2B2125; --muted:#574A4D; --soft:#6B5D60;
+  --plum:#5B2A4A; --plum-d:#3F1C33; --plum-t:#EFE3EA;
+  --clay:#C07A5C; --clay-d:#9A5236; --clay-dd:#6E3620; --clay-t:#F3DCCF;
+  --sage:#8A9D80; --sage-t:#E3E9DD; --sage-d:#3E5139; --sage-dd:#2F3F2B;
+  --line:#CDBFB0; --field:#978676; --track:#DDD0C2;
+  --bg:var(--sand); --fg:var(--ink); --primary:var(--plum); --on-primary:#FFFFFF; --accent:var(--plum); --done:var(--plum); --focus:var(--plum);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--sand);color:var(--ink);font-family:'Figtree',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:1rem;line-height:1.5;-webkit-font-smoothing:antialiased}
+body.is-night{background:#33192B}
+body.is-white{background:#FFFFFF}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+#app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+
+.screen{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;background:var(--bg);color:var(--fg)}
+.night{--bg:#33192B;--fg:#F5EFE6;--muted:#D8C6CF;--soft:#D8C6CF;--paper:#4A2640;--line:#7A5470;--primary:#F5EFE6;--on-primary:#33192B;--accent:#F5EFE6;--track:#5A3550;--done:#E7B9A3;--focus:#E7B9A3;--oat:#4A2640}
+.white{--bg:#FFFFFF;--fg:#1F1719}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 12px 0 8px;min-height:56px;padding-top:calc(12px + env(safe-area-inset-top))}
+.topbar .mid{font-size:.875rem;font-weight:600;color:var(--muted);text-align:center}
+.icon-btn{width:44px;height:44px;flex-shrink:0;border:0;background:none;border-radius:22px;display:inline-flex;align-items:center;justify-content:center;color:inherit;padding:0}
+.icon-btn.filled{background:var(--oat)}
+.text-btn{min-height:44px;padding:0 8px;border:0;background:none;font-weight:600;color:var(--accent);font-size:.9375rem;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.spacer{width:44px;flex-shrink:0}
+.brand{margin:0;font-family:'Fraunces',Georgia,serif;font-size:1.375rem;font-weight:600;color:var(--plum);padding-left:16px}
+
+.progress{display:flex;gap:4px;padding:6px 24px 0}
+.progress span{flex:1;height:4px;border-radius:2px;background:var(--track);overflow:hidden;position:relative}
+.progress span i{position:absolute;inset:0 auto 0 0;background:var(--done);border-radius:2px}
+
+.content{flex:1;padding:20px 24px 24px;display:flex;flex-direction:column;gap:22px}
+.display{font-family:'Fraunces',Georgia,serif;font-weight:500;font-size:1.875rem;line-height:1.15;letter-spacing:-.015em;margin:0}
+.display.xl{font-size:2.125rem;line-height:1.12}
+.lede{margin:8px 0 0;color:var(--muted);font-size:1rem}
+.label{display:block;font-weight:700;font-size:.9375rem;margin:0 0 10px;padding:0}
+.label .opt{font-weight:400;color:var(--muted)}
+.help{font-size:.875rem;color:var(--muted);margin:8px 0 0}
+.error{font-size:.875rem;color:#9B2C2C;font-weight:600;margin:8px 0 0}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend{padding:0}
+.section-label{font-size:.8125rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+
+.field{width:100%;padding:12px 14px;border-radius:14px;border:1.5px solid var(--field);background:#FBF8F3;font-size:1rem;line-height:1.45;color:#2B2125;min-height:50px}
+textarea.field{resize:vertical;min-height:104px;display:block}
+.night .field{border-color:#9C7A92;background:#F5EFE6}
+.row{display:flex;gap:8px;align-items:stretch}
+.row .field{flex:1;min-width:0}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:44px;padding:0 14px;border-radius:22px;border:1.5px solid var(--line);background:var(--paper);font-size:.9375rem;font-weight:500;display:inline-flex;align-items:center;gap:6px;color:var(--fg)}
+.chip[aria-pressed="true"]{border-color:var(--plum);background:var(--plum-t);color:var(--plum-d);font-weight:600;padding-left:10px}
+.night .chip[aria-pressed="true"]{border-color:#E7B9A3;background:#5A3550;color:#F5EFE6}
+.chip.add{border-style:dashed;border-color:var(--field);background:transparent;color:var(--accent);font-weight:600;padding-left:10px}
+
+.seg{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:4px;padding:4px;border-radius:16px;background:var(--oat)}
+.seg button{min-height:44px;border:0;border-radius:12px;background:transparent;font-size:.9375rem;color:#3A2F31;padding:0 6px}
+.seg button[aria-pressed="true"]{background:var(--paper);font-weight:700;color:var(--ink);box-shadow:0 1px 3px rgba(43,33,37,.14)}
+
+.radio-list{display:flex;flex-direction:column;gap:8px}
+.radio-card{display:flex;align-items:center;gap:14px;min-height:60px;padding:10px 16px;border-radius:18px;background:var(--paper);border:2px solid transparent;cursor:pointer}
+.radio-card:has(input:checked){border-color:var(--plum);background:var(--plum-t)}
+.radio-card input{width:22px;height:22px;margin:0;flex-shrink:0;accent-color:var(--plum)}
+.radio-card .t{display:block;font-size:1.0625rem;font-weight:600}
+.radio-card .d{display:block;font-size:.875rem;color:var(--muted)}
+
+.scale{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.scale button{min-height:48px;border-radius:14px;border:1.5px solid var(--line);background:var(--paper);font-size:1.0625rem;font-weight:600;color:var(--ink)}
+.scale button[aria-pressed="true"]{background:var(--plum);border-color:var(--plum);color:#fff}
+.scale-word{margin:8px 0 0;font-size:.9375rem;font-weight:600;color:var(--plum);min-height:1.5em}
+.scale-ends{display:flex;justify-content:space-between;font-size:.8125rem;color:var(--muted);margin-top:6px}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;border-radius:28px;border:0;background:var(--primary);color:var(--on-primary);font-size:1.0625rem;font-weight:600;text-decoration:none;padding:0 20px;text-align:center}
+.btn.outline{background:transparent;border:2px solid var(--primary);color:var(--primary)}
+.btn.sm{min-height:48px;font-size:1rem;border-radius:24px}
+.btn.quiet{background:var(--oat);color:var(--ink)}
+.skip{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;border:0;background:none;color:var(--accent);font-size:1rem;font-weight:600}
+.footer{position:sticky;bottom:0;padding:12px 24px calc(16px + env(safe-area-inset-bottom));background:var(--bg);display:flex;flex-direction:column;gap:2px;z-index:2}
+
+.lock{display:inline-flex;align-items:center;gap:6px;padding:5px 12px 5px 9px;border-radius:999px;background:var(--sage-t);color:var(--sage-d);font-size:.8125rem;font-weight:600;align-self:flex-start}
+.night .lock{background:#4A2640;color:#E3E9DD}
+.tip{padding:12px 14px;border-radius:14px;background:var(--sage-t);color:var(--sage-dd);font-size:.875rem;margin:0}
+.note{padding:16px 18px;border-radius:18px;background:var(--oat);font-size:.9375rem;margin:0}
+.card{background:var(--paper);border-radius:20px;padding:18px}
+.card h2{margin:0}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.card-head .section-label{margin:0}
+.badge{flex-shrink:0;padding:4px 10px;border-radius:999px;font-size:.8125rem;font-weight:700;background:var(--clay-t);color:var(--clay-dd)}
+.badge.sage{background:var(--sage-t);color:var(--sage-dd)}
+.empty{border:1.5px dashed var(--line);background:transparent;text-align:center;padding:28px 22px;border-radius:24px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.muted{color:var(--muted)}
+
+.qlist{display:flex;flex-direction:column;gap:6px}
+.qrow{display:flex;align-items:center;gap:2px;min-height:52px;padding:4px 2px 4px 14px;border-radius:16px;background:var(--paper)}
+.qrow p{flex:1;margin:0;font-size:.9375rem;line-height:1.4}
+.qrow.on p{font-weight:600}
+.star{color:var(--soft)}
+.star[aria-pressed="true"]{color:var(--clay-d)}
+
+.impact{display:grid;grid-template-columns:minmax(84px,1.3fr) repeat(4,minmax(0,1fr));column-gap:4px;row-gap:8px;align-items:center}
+.impact .h{font-size:.75rem;font-weight:600;color:var(--muted);text-align:center;line-height:1.2}
+.impact .r{font-size:.9375rem;font-weight:600;line-height:1.25}
+.impact button{min-height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--paper);display:flex;align-items:center;justify-content:center;color:#fff;padding:0}
+.impact button[aria-pressed="true"]{background:var(--plum);border-color:var(--plum)}
+
+.topics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.topics button{min-height:56px;padding:10px 14px;border-radius:16px;background:#4A2640;border:1.5px solid transparent;color:#F5EFE6;font-size:.9375rem;font-weight:600;line-height:1.3;text-align:left;display:flex;align-items:center;gap:6px}
+.topics button.ghost{background:transparent;border-color:#7A5470}
+.phrase{width:100%;text-align:left;min-height:48px;padding:12px 14px;border-radius:16px;border:1.5px solid #7A5470;background:transparent;color:#F5EFE6;font-size:.9375rem;line-height:1.4;display:flex;gap:10px;align-items:flex-start}
+.phrase[aria-pressed="true"]{border-color:#E7B9A3;background:#4A2640}
+.phrase svg{flex-shrink:0;margin-top:1px}
+.notecard{background:#4A2640;border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:4px 14px;border-radius:14px;background:var(--paper)}
+.switch input{width:22px;height:22px;flex-shrink:0;accent-color:var(--plum)}
+.night .switch input{accent-color:#E7B9A3}
+.crisis{padding:14px 16px;border-radius:16px;background:#F5EFE6;color:#2B2125;font-size:.9375rem;margin:0}
+
+.appt{background:var(--paper);border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.appt .t{margin:0;font-size:1.125rem;font-weight:700}
+.appt .s{margin:2px 0 0;font-size:.9375rem;color:var(--muted)}
+.minibar{display:flex;gap:4px}
+.minibar span{flex:1;height:6px;border-radius:3px;background:var(--track)}
+.minibar span.on{background:var(--plum)}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.actions .btn{flex:1 1 140px;width:auto}
+
+.act-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.act-grid .wide{grid-column:span 2}
+.tile{min-height:64px;border-radius:18px;border:0;background:var(--oat);font-size:.875rem;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--ink)}
+.timeline{list-style:none;margin:12px 0 0;padding:0}
+.timeline li{display:flex;gap:12px}
+.timeline .dot{display:flex;flex-direction:column;align-items:center;width:14px;flex-shrink:0}
+.timeline .dot b{width:12px;height:12px;border-radius:6px;background:var(--clay-t);border:2px solid var(--clay);margin-top:5px}
+.timeline .dot i{flex:1;width:2px;background:var(--track)}
+.timeline li:last-child .dot b{background:var(--plum);border-color:var(--plum)}
+.timeline .k{margin:0;font-size:.875rem;font-weight:700;color:var(--muted)}
+.timeline .v{margin:2px 0 0;padding-bottom:12px}
+.dl{display:grid;grid-template-columns:minmax(96px,auto) 1fr;row-gap:6px;column-gap:12px;margin:12px 0 0;font-size:.9375rem}
+.dl dt{color:var(--muted)}
+.dl dd{margin:0;font-weight:600}
+.bars{display:grid;grid-template-columns:minmax(96px,auto) 1fr auto;row-gap:10px;column-gap:10px;align-items:center;font-size:.9375rem;margin-top:10px}
+.bars .bar{height:8px;border-radius:4px;background:var(--oat);overflow:hidden}
+.bars .bar i{display:block;height:100%;background:var(--plum)}
+.hardcard{background:#33192B;color:#F5EFE6;border-radius:20px;padding:18px}
+.hardcard .section-label{color:#D8C6CF}
+.danger{color:#9B2C2C}
+
+.steps-list{display:flex;flex-direction:column;gap:6px}
+.check-row{display:flex;align-items:center;gap:12px;min-height:48px;padding:4px 4px 4px 14px;border-radius:14px;background:var(--paper)}
+.check-row input{width:22px;height:22px;margin:0;flex-shrink:0;accent-color:var(--plum)}
+.check-row span{flex:1}
+.check-row.done span{text-decoration:line-through;color:var(--muted)}
+
+/* clinician */
+.clin-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px 10px 20px;padding-top:calc(10px + env(safe-area-inset-top));background:var(--sand);border-bottom:1px solid #E2D8CC}
+.clin{padding:28px 24px 32px;display:flex;flex-direction:column;gap:26px;font-size:1.0625rem;color:#1F1719}
+.clin.big{font-size:1.25rem}
+.clin h2{margin:0 0 10px;font-size:.875rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--plum)}
+.clin .hello{margin:0;font-family:'Fraunces',Georgia,serif;font-size:1.625em;line-height:1.25;font-weight:500}
+.clin .meta{margin:10px 0 0;font-size:.9em;color:var(--muted)}
+.clin .boxed{padding:20px;border-radius:16px;background:var(--sand)}
+.clin .main{margin:0;font-size:1.25em;line-height:1.4;font-weight:600}
+.clin ol{margin:0;padding-left:1.5em;display:flex;flex-direction:column;gap:8px;font-size:1.1em}
+.clin ul{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.clin table{width:100%;border-collapse:collapse;font-size:.95em}
+.clin th,.clin td{text-align:left;padding:10px 8px 10px 0;border-bottom:1px solid #E2D8CC;vertical-align:top}
+.clin thead th{font-size:.8em;color:var(--muted);border-bottom:2px solid #1F1719;padding-top:0}
+.clin .quote{margin:0;font-size:1.1em;line-height:1.45}
+.clin .hard{padding:20px;border-radius:16px;border:2px solid var(--plum)}
+.clin .foot{margin:0;padding-top:18px;border-top:1px solid #E2D8CC;font-size:.8em;color:var(--muted)}
+
+.toast{position:fixed;left:50%;bottom:calc(110px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(8px);background:#2B2125;color:#fff;padding:12px 18px;border-radius:14px;font-size:.9375rem;width:max-content;max-width:min(90vw,420px);opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:10;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+
+@media print{
+  @page{margin:16mm}
+  body,body.is-white{background:#fff}
+  .no-print{display:none !important}
+  .screen{min-height:0}
+  .clin{padding:0;font-size:12pt}
+  .clin .boxed{background:#F5EFE6;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #app{max-width:none}
+}
+</style>
+</head>
+<body>
+<div id="app" aria-live="off"></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<input id="restoreFile" type="file" accept="application/json,.json" class="sr-only" tabindex="-1" aria-hidden="true">
+<noscript><p style="padding:24px">Heard needs JavaScript turned on to work.</p></noscript>
+<script>
+(function(){
+'use strict';
+
+/* ---------- icons ---------- */
+function svg(p, size, sw, fill){ size=size||24; sw=sw||2; fill=fill||'none';
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="'+fill+'" stroke="currentColor" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+p+'</svg>'; }
+var P = {
+  back:'<path d="M15 18l-6-6 6-6"/>',
+  close:'<path d="M6 6l12 12M18 6L6 18"/>',
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  star:'<path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.8l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/>',
+  trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+  edit:'<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  speaker:'<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16 9a4 4 0 0 1 0 6"/>',
+  stop:'<rect x="6" y="6" width="12" height="12" rx="2"/>',
+  download:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  phone:'<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 17h2"/>',
+  cal:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+  clock:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',
+  out:'<path d="M7 17L17 7M9 7h8v8"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'
+};
+function ic(name, size, sw, fill){ return svg(P[name], size, sw, fill); }
+
+/* ---------- content ---------- */
+var TYPES = [
+  {id:'gp', label:'GP appointment', desc:'At your surgery, by phone or video'},
+  {id:'sexual', label:'Sexual health clinic', desc:'Testing, symptoms, PrEP or advice'},
+  {id:'gynae', label:'Gynaecology', desc:'Usually a hospital or specialist referral'},
+  {id:'smear', label:'Smear test', desc:'Cervical screening, usually with a nurse'},
+  {id:'contra', label:'Contraception', desc:'Starting, switching or stopping'},
+  {id:'other', label:'Something else', desc:'Menopause, fertility, anything at all'}
+];
+var QUESTIONS = {
+  gp:['What could be causing this?','What tests might I need, and what do they involve?','Is there anything I can try in the meantime?','What should I do if it gets worse?','Can I have a chaperone, or choose who examines me?','When should I come back if things don’t improve?'],
+  sexual:['Which tests do you recommend for me, and why?','How and when will I get my results?','Is there anything I should avoid until I get my results?','Do I need to tell any partners, and can you help with that?','Would PrEP or any vaccinations be useful for me?'],
+  gynae:['What do you think is going on?','What are my treatment options, and their side effects?','Do I need any scans or procedures, and what do they involve?','Could this affect my fertility?','Who do I contact if things get worse before my next appointment?'],
+  smear:['Can I have a smaller speculum, or lie in a different position?','Can I bring someone with me, or have a chaperone?','Can I stop at any point if I need to?','When and how will I get my results?','What happens if HPV is found?'],
+  contra:['Which methods would suit my health and lifestyle?','What side effects are common, and when should I be worried?','How quickly does it work, and how quickly can I get pregnant if I stop?','What should I do if I miss a dose or something goes wrong?','Does it protect against STIs?'],
+  other:['What could be causing this?','What are my options?','What happens next, and when?','Where can I find reliable information about this?']
+};
+var SYMPTOMS = ['Heavy periods','Period pain','Irregular periods','Bleeding between periods','Pelvic pain','Pain during sex','Discharge changes','Itching or soreness','Peeing more often','Pain when peeing','Bloating','Tiredness','Mood changes','Hot flushes'];
+var SINCE = ['Days ago','Weeks ago','Months ago','Over a year ago','As long as I can remember'];
+var OFTEN = ['All the time','Most days','A few times a week','With my period','Comes and goes'];
+var TREND = ['Better','Same','Worse'];
+var SEV = ['','Barely there','Noticeable','Hard to ignore','Stops me doing things','The worst I’ve felt'];
+var HELPS = ['Heat','Rest','Lying down','Painkillers','Moving about','Nothing helps'];
+var WORSE = ['Moving about','Sitting','Stress','Sex','Food','Around my period'];
+var IMPACT = [['work','Work or study'],['sleep','Sleep'],['sex','Sex and intimacy'],['mood','Mood'],['exercise','Exercise'],['social','Social life']];
+var LEVELS = ['Not at all','A little','A lot','Hugely'];
+var HEARD = ['Yes, completely','Mostly','Partly','Not really','Not at all'];
+var HARD_WORDS = 'I find this hard to talk about, so I’ve written it down.';
+var TOPICS = {
+  periods:{label:'Periods & bleeding', reassure:'Heavy or painful periods are common, but that doesn’t mean you have to put up with them.',
+    phrases:['My periods are so heavy I bleed through pads or tampons.','I’m bleeding between periods, or after sex.','My period pain stops me doing normal things.','My cycle has changed and I don’t know why.'],
+    word:['menorrhagia','the medical word for heavy periods']},
+  sex:{label:'Sex & pain during sex', reassure:'Pain during sex is common, and it’s treatable. You deserve to have it taken seriously.',
+    phrases:['It hurts when I have sex, and it’s been going on for a while.','The pain feels deep inside, not at the entrance.','The pain is at the entrance when anything goes in.','I sometimes bleed afterwards.','It’s affecting my relationship and I’d like help with it.'],
+    word:['dyspareunia','the medical word for pain during sex']},
+  discharge:{label:'Discharge or smell', reassure:'Clinicians talk about discharge all the time. Colour, smell and amount are really useful to describe.',
+    phrases:['My discharge has changed in colour, smell or amount.','I’ve noticed a smell that worries me.','I’m itchy or sore down there.','It keeps coming back after treatment.']},
+  bladder:{label:'Bladder & bowels', reassure:'Leaks and bowel changes are really common, and there’s a lot that can help.',
+    phrases:['I leak a bit of wee when I cough, laugh or exercise.','I need to go much more often, or very suddenly.','It hurts or burns when I pee.','Pooing is painful, or has changed.'],
+    word:['stress incontinence','leaking a little wee when you cough, laugh or exercise']},
+  meno:{label:'Menopause & hormones', reassure:'Symptoms can start years before your periods stop, and you can ask for help at any point.',
+    phrases:['I think I might be perimenopausal.','My mood, sleep or memory have changed and I’m not sure why.','I’m having hot flushes or night sweats.','I’d like to talk about HRT.'],
+    word:['perimenopause','the years leading up to your last period']},
+  mood:{label:'Mood & coping', reassure:'How you’re feeling matters as much as any physical symptom.', crisis:true,
+    phrases:['I’ve been struggling with how I’m feeling.','This is affecting my mental health.','I’m finding it hard to cope day to day.','I feel like I haven’t been taken seriously before.']},
+  preg:{label:'Pregnancy & fertility', reassure:'Whatever you’re hoping for or worried about, you can say it plainly.',
+    phrases:['We’ve been trying to get pregnant for a while.','I’m worried I might be pregnant.','I’d like to talk about my options.','I’ve had a loss and I’m not sure what to ask.']},
+  write:{label:'Just write', reassure:'No prompts, just space to get it down in your own words.', phrases:[]}
+};
+var STEPS = ['type','when','what','timing','severity','hard','questions','impact'];
+var MACRO = {type:1,when:1,what:2,timing:2,severity:2,hard:3,questions:4,impact:5};
+var MACRO_NAME = ['','Appointment','Symptoms','Hard-to-say','Questions','Impact','Summary'];
+var GROUPS = {1:['type','when'],2:['what','timing','severity'],3:['hard'],4:['questions'],5:['impact']};
+
+/* ---------- storage ---------- */
+var KEY = 'heard.v1';
+var storageOk = true;
+function fresh(){ return {v:1, onboarded:false, profile:null, appts:[]}; }
+function load(){
+  try { var raw = localStorage.getItem(KEY); if (raw) { var d = JSON.parse(raw); if (d && Array.isArray(d.appts)) { d.appts.forEach(normalise); return d; } } }
+  catch(e){ storageOk = false; }
+  return fresh();
+}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(db)); storageOk = true; } catch(e){ storageOk = false; } }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function blankAppt(){
+  return {id:uid(), created:Date.now(), type:null, date:'', time:'', mode:'In person', who:'', main:'',
+    what:{text:'', chips:[]}, timing:{since:null, roughly:'', often:null, trend:null},
+    severity:{typical:null, bad:null, helps:[], worse:[], other:''}, hard:[], questions:null, qType:null,
+    impact:{example:''}, after:{said:'', steps:[], followUp:'', answered:{}}, heard:{rating:null, note:''},
+    lastStep:'type', status:'prep'};
+}
+function normalise(a){
+  var b = blankAppt();
+  Object.keys(b).forEach(function(k){
+    if (a[k] === undefined) a[k] = b[k];
+    else if (b[k] && typeof b[k] === 'object' && !Array.isArray(b[k]) && a[k] && typeof a[k] === 'object') {
+      Object.keys(b[k]).forEach(function(k2){ if (a[k][k2] === undefined) a[k][k2] = b[k][k2]; });
+    }
+  });
+  return a;
+}
+var db = load();
+var ui = { route: !db.onboarded ? 'welcome' : 'home', step:'type', apptId:null, draft:null, newChip:'', addingChip:false, newQ:'', newStep:'', confirm:null, speaking:false, big:false, setupErr:'', from:null };
+
+/* ---------- helpers ---------- */
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function cur(){ for (var i=0;i<db.appts.length;i++) if (db.appts[i].id === ui.apptId) return db.appts[i]; return null; }
+function pad(n){ return String(n).padStart(2,'0'); }
+function ymd(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function todayStr(){ return ymd(new Date()); }
+function fmtDate(s, long){ if (!s) return ''; var d = new Date(s+'T00:00'); if (isNaN(d)) return s;
+  return d.toLocaleDateString('en-GB', long ? {weekday:'long', day:'numeric', month:'long', year:'numeric'} : {weekday:'short', day:'numeric', month:'short'}); }
+function daysUntil(s){ if (!s) return null; var a = new Date(s+'T00:00'), b = new Date(todayStr()+'T00:00'); return Math.round((a-b)/86400000); }
+function typeOf(a){ for (var i=0;i<TYPES.length;i++) if (TYPES[i].id === a.type) return TYPES[i]; return null; }
+function typeLabel(a){ var t = typeOf(a); return t ? t.label : 'Appointment'; }
+function isPast(a){ return !!a.date && a.date < todayStr(); }
+function split(arg){ var i = arg.indexOf('|'); return i < 0 ? [arg, ''] : [arg.slice(0,i), arg.slice(i+1)]; }
+function resolve(path){
+  var parts = path.split('.'), root = parts.shift(), obj;
+  if (root === 'a') obj = cur();
+  else if (root === 'p') { if (!db.profile) db.profile = {name:'', age:''}; obj = db.profile; }
+  else if (root === 'ui') obj = ui;
+  return {obj:obj, rest:parts};
+}
+function getPath(path){ var r = resolve(path), o = r.obj; for (var i=0;i<r.rest.length;i++){ if (o == null) return undefined; o = o[r.rest[i]]; } return o; }
+function setPath(path, val){ var r = resolve(path), o = r.obj; if (!o) return; for (var i=0;i<r.rest.length-1;i++){ if (o[r.rest[i]] == null) o[r.rest[i]] = {}; o = o[r.rest[i]]; } o[r.rest[r.rest.length-1]] = val; }
+function listJoin(arr){ if (!arr.length) return ''; if (arr.length === 1) return arr[0]; return arr.slice(0,-1).join(', ') + ' and ' + arr[arr.length-1]; }
+function autoMain(a){ var c = a.what.chips.slice(0,3).map(function(x,i){ return i ? x.toLowerCase() : x; }); return c.length ? listJoin(c) + '.' : ''; }
+function mainText(a){ return (a.main && a.main.trim()) || autoMain(a); }
+function starred(a){ return (a.questions || []).filter(function(q){ return q.starred; }); }
+function profileLine(){ var p = db.profile; if (!p) return ''; var n = (p.name||'').trim(), g = String(p.age||'').trim(); if (n && g) return n + ', ' + g; return n || (g ? 'Age ' + g : ''); }
+
+var toastTimer;
+function toast(msg){ var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3200); }
+function download(name, content, type){
+  var blob = new Blob([content], {type:type}); var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+
+/* ---------- shared UI pieces ---------- */
+function attrs(o){ var s=''; for (var k in o) if (o[k] != null && o[k] !== false) s += ' '+k+'="'+esc(o[k])+'"'; return s; }
+function btn(label, act, arg, cls, extra){ return '<button type="button" class="'+(cls||'btn')+'"'+attrs({'data-act':act,'data-arg':arg})+(extra||'')+'>'+label+'</button>'; }
+function lock(text){ return '<span class="lock">'+ic('lock',15,2.2)+'<span>'+esc(text)+'</span></span>'; }
+function chip(label, on, act, arg){ return '<button type="button" class="chip" aria-pressed="'+(on?'true':'false')+'"'+attrs({'data-act':act,'data-arg':arg})+'>'+(on?ic('check',16,2.6):'')+esc(label)+'</button>'; }
+function topbar(left, mid, right){ return '<header class="topbar no-print">'+left+'<span class="mid">'+mid+'</span>'+right+'</header>'; }
+function backBtn(act, arg, label){ return '<button type="button" class="icon-btn" aria-label="'+esc(label||'Back')+'"'+attrs({'data-act':act,'data-arg':arg})+'>'+ic('back')+'</button>'; }
+function h1(text, cls){ return '<h1 class="display '+(cls||'')+'" tabindex="-1">'+text+'</h1>'; }
+function progress(step){
+  var m = MACRO[step], g = GROUPS[m], idx = g.indexOf(step), frac = (idx+1)/g.length, s = '';
+  for (var k=1;k<=6;k++){ var w = k < m ? 100 : (k === m ? Math.round(frac*100) : 0); s += '<span><i style="width:'+w+'%"></i></span>'; }
+  return '<div class="progress" role="progressbar" aria-label="Progress" aria-valuemin="1" aria-valuemax="6" aria-valuenow="'+m+'" aria-valuetext="Step '+m+' of 6, '+MACRO_NAME[m]+'">'+s+'</div>';
+}
+function footer(primary, skip){ return '<div class="footer no-print">'+primary+(skip||'')+'</div>'; }
+
+/* ---------- screens ---------- */
+var V = {};
+
+V.welcome = function(){
+  return '<div class="screen">'+
+  '<div aria-hidden="true" style="height:min(42vh,360px);overflow:hidden;flex-shrink:0">'+
+    '<svg width="100%" height="100%" viewBox="0 0 390 360" preserveAspectRatio="xMidYMid slice" fill="none">'+
+    '<circle cx="300" cy="90" r="150" fill="#EBDDCB"/><path d="M-20 240 C 40 160, 150 180, 190 240 S 300 350, 410 290 L 410 400 L -20 400 Z" fill="#C9D3C0"/>'+
+    '<circle cx="150" cy="190" r="22" fill="#5B2A4A"/><circle cx="150" cy="190" r="52" stroke="#C07A5C" stroke-width="3"/>'+
+    '<circle cx="150" cy="190" r="86" stroke="#C07A5C" stroke-width="2.5" opacity=".7"/><circle cx="150" cy="190" r="122" stroke="#C07A5C" stroke-width="2" opacity=".4"/>'+
+    '<circle cx="318" cy="242" r="10" fill="#C07A5C"/></svg></div>'+
+  '<div class="content" style="gap:14px;padding-top:8px">'+
+    '<p class="brand" style="padding:0">Heard</p>'+
+    h1('Walk in knowing what you want to say.','xl')+
+    '<p class="lede" style="margin:0;font-size:1.0625rem">Get ready for GP, sexual health and women’s health appointments, so the important stuff doesn’t come to you on the way home.</p>'+
+    lock('Private by design. It all stays on this device.')+
+  '</div>'+
+  footer(btn('Let’s get started','go','privacy'), btn('How Heard keeps things private','go','privacy','skip'))+
+  '</div>';
+};
+
+V.privacy = function(){
+  var row = function(color, title, body){ return '<li style="display:flex;gap:14px"><span aria-hidden="true" style="flex-shrink:0;width:10px;height:10px;border-radius:5px;background:'+color+';margin-top:8px"></span><div><p style="margin:0;font-size:1.0625rem;font-weight:600">'+title+'</p><p style="margin:2px 0 0;color:var(--muted)">'+body+'</p></div></li>'; };
+  return '<div class="screen">'+
+  topbar(backBtn('go','welcome'),'','<span class="spacer"></span>')+
+  '<div class="content">'+
+    '<div aria-hidden="true" style="width:64px;height:64px;border-radius:32px;background:var(--sage-t);display:flex;align-items:center;justify-content:center;color:var(--sage-d)">'+ic('lock',30,1.8)+'</div>'+
+    h1('Your notes are yours.')+
+    '<ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:18px">'+
+      row('#C07A5C','It stays on this device','No account and no cloud. What you write is saved in this browser and isn’t sent anywhere.')+
+      row('#8A9D80','You choose what’s shown','Nothing reaches your clinician unless you hand it over, read it out or save it as a PDF.')+
+      row('#5B2A4A','Keep a backup','If you clear your browser data, your notes go with it. You can download a backup any time in settings.')+
+    '</ul>'+
+    '<p class="note"><strong>Good to know.</strong> Heard helps you prepare and say what you need to. It doesn’t diagnose or give medical advice. If you’re very unwell, call 999. For urgent advice, call NHS 111.</p>'+
+  '</div>'+
+  footer(btn('Sounds good','afterPrivacy'))+
+  '</div>';
+};
+
+V.setup = function(){
+  var p = db.profile || {name:'', age:''}, editing = db.onboarded;
+  return '<div class="screen">'+
+  topbar(backBtn('go', editing ? 'settings' : 'privacy'),'','<span class="spacer"></span>')+
+  '<div class="content">'+
+    '<div>'+h1(editing ? 'About you' : 'Let’s get you set up')+
+    '<p class="lede">Two quick things. They go at the top of the summary you show your clinician, so you don’t have to spell them out on the day.</p></div>'+
+    '<div><label class="label" for="name">What should we call you? <span class="opt">(optional)</span></label>'+
+    '<input class="field" id="name" type="text" autocomplete="given-name" autocapitalize="words" data-bind="p.name" value="'+esc(p.name)+'" placeholder="Your first name"></div>'+
+    '<div><label class="label" for="age">How old are you? <span class="opt">(optional)</span></label>'+
+    '<input class="field" id="age" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" data-bind="p.age" value="'+esc(p.age)+'" placeholder="e.g. 32" style="max-width:160px"'+(ui.setupErr?' aria-invalid="true" aria-describedby="ageErr"':'')+'>'+
+    (ui.setupErr ? '<p class="error" id="ageErr">'+esc(ui.setupErr)+'</p>' : '<p class="help">Clinicians often ask, and some checks and screening depend on age.</p>')+'</div>'+
+    lock('Saved only on this device. Change or remove it any time.')+
+  '</div>'+
+  footer(btn(editing ? 'Save' : 'Continue','finishSetup'), editing ? '' : btn('Skip for now','skipSetup',null,'skip'))+
+  '</div>';
+};
+
+function apptCard(a){
+  var past = isPast(a), d = daysUntil(a.date), when = a.date ? fmtDate(a.date) + (a.time ? ' · ' + a.time : '') : 'No date yet';
+  var badge = '';
+  if (a.status === 'done' && a.heard.rating) badge = '<span class="badge sage">'+esc(a.heard.rating)+'</span>';
+  else if (!past && d != null) badge = '<span class="badge">'+(d === 0 ? 'Today' : d === 1 ? 'Tomorrow' : 'In '+d+' days')+'</span>';
+  var body = '', acts = '';
+  if (a.status === 'prep') {
+    var m = MACRO[a.lastStep] || 1, bars = '';
+    for (var k=1;k<=6;k++) bars += '<span class="'+(k < m ? 'on' : '')+'"></span>';
+    body = '<div><div class="minibar" aria-hidden="true">'+bars+'</div><p class="s" style="margin-top:8px">'+(m-1)+' of 6 steps done. Saved as you go.</p></div>';
+    acts = btn('Pick up where you left off','open',a.id,'btn sm');
+  } else if (a.status === 'done') {
+    var todo = a.after.steps.filter(function(s){ return !s.done; }).length;
+    var unanswered = starred(a).filter(function(q){ return !a.after.answered[q.id]; }).length;
+    var li = [];
+    if (todo) li.push(['clock', todo+' next step'+(todo>1?'s':'')+' to do']);
+    if (a.after.followUp) li.push(['cal', 'Follow-up '+fmtDate(a.after.followUp)]);
+    if (unanswered) li.push(['star', unanswered+' question'+(unanswered>1?'s':'')+' still to ask']);
+    if (li.length) body = '<ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px">'+li.map(function(x){ return '<li style="display:flex;gap:8px;align-items:center"><span style="color:var(--clay-d);display:flex">'+ic(x[0],18)+'</span>'+esc(x[1])+'</li>'; }).join('')+'</ul>';
+    acts = btn('My notes','after',a.id,'btn sm quiet') + btn('Summary','openSummary',a.id,'btn sm quiet') + (unanswered || a.after.followUp ? btn('Prepare for follow-up','followUp',a.id,'btn sm') : '');
+  } else {
+    body = '<p class="s" style="margin:0">'+(past ? 'Had your appointment? Jot down what was said while it’s fresh.' : 'Ready. Your summary is waiting for the day.')+'</p>';
+    acts = past ? btn('After the appointment','after',a.id,'btn sm') + btn('Summary','openSummary',a.id,'btn sm quiet')
+                : btn('View summary','openSummary',a.id,'btn sm') + btn('After the appointment','after',a.id,'btn sm quiet');
+  }
+  return '<article class="appt"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start"><div><h3 class="t">'+esc(typeLabel(a))+'</h3><p class="s">'+esc(when)+(a.who ? ' · '+esc(a.who) : '')+'</p></div>'+badge+'</div>'+body+'<div class="actions">'+acts+'</div></article>';
+}
+
+V.home = function(){
+  var name = db.profile && (db.profile.name||'').trim();
+  var list = db.appts.slice().sort(function(x,y){ return (x.date||'9999').localeCompare(y.date||'9999') || x.created - y.created; });
+  var upcoming = list.filter(function(a){ return a.status !== 'done' && !isPast(a); });
+  var past = list.filter(function(a){ return upcoming.indexOf(a) < 0; }).reverse();
+  var html = '<div class="screen">'+
+  '<header class="topbar"><p class="brand">Heard</p>'+btn(ic('settings',20),'go','settings','icon-btn filled',' aria-label="Settings and privacy"')+'</header>'+
+  '<div class="content">'+
+    '<div><p style="margin:0;color:var(--muted)">'+(name ? 'Hi '+esc(name) : 'Hi there')+'</p>'+h1(db.appts.length ? 'Welcome back.' : 'Got an appointment coming up?')+'</div>';
+  if (!storageOk) html += '<p class="note"><strong>Heads up:</strong> this browser isn’t letting Heard save. Your notes will be lost when you close it. Try opening it in a normal (not private) window.</p>';
+  if (!db.appts.length) {
+    html += '<section class="empty"><svg width="132" height="96" viewBox="0 0 132 96" fill="none" aria-hidden="true"><rect x="18" y="14" width="96" height="74" rx="18" fill="#EBDDCB"/><path d="M38 36h56M38 50h40M38 64h28" stroke="#C07A5C" stroke-width="5" stroke-linecap="round"/><circle cx="104" cy="22" r="14" fill="#C9D3C0"/><circle cx="104" cy="22" r="5" fill="#5B2A4A"/></svg>'+
+      '<h2 style="margin:0;font-size:1.1875rem">Nothing here yet</h2><p class="muted" style="margin:0">Booked something, or still thinking about booking? Start here. It takes about 10 minutes and you can stop whenever you like.</p>'+
+      btn(ic('plus',20,2.2)+'Prepare for an appointment','newAppt')+'</section>'+
+      '<a class="card" href="https://111.nhs.uk" target="_blank" rel="noopener" style="background:var(--sage-t);color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:14px"><div style="flex:1"><p style="margin:0;font-weight:600">Not sure if you need to be seen?</p><p style="margin:2px 0 0;color:var(--sage-d)">NHS 111 online can help you decide</p></div><span style="color:var(--sage-d);display:flex">'+ic('out',20)+'</span></a>';
+  } else {
+    if (upcoming.length) html += '<section aria-labelledby="hu"><h2 class="section-label" id="hu">Coming up</h2><div style="display:flex;flex-direction:column;gap:12px">'+upcoming.map(apptCard).join('')+'</div></section>';
+    if (past.length) html += '<section aria-labelledby="hp"><h2 class="section-label" id="hp">Past</h2><div style="display:flex;flex-direction:column;gap:12px">'+past.map(apptCard).join('')+'</div></section>';
+  }
+  html += '</div>';
+  if (db.appts.length) html += footer(btn(ic('plus',20,2.2)+'Prepare for another appointment','newAppt','','btn outline'), '<p style="margin:10px 0 0;text-align:center;font-size:.8125rem;color:var(--soft)">Everything here is stored only on this device.</p>');
+  else html += '<p style="margin:0 24px 28px;text-align:center;font-size:.8125rem;color:var(--soft)">Heard helps you prepare. It doesn’t diagnose or give medical advice.</p>';
+  return html + '</div>';
+};
+
+V.settings = function(){
+  var p = profileLine();
+  return '<div class="screen">'+
+  topbar(backBtn('go','home'),'Settings','<span class="spacer"></span>')+
+  '<div class="content">'+
+    h1('Settings & privacy')+
+    '<section class="card"><div class="card-head"><h2 class="section-label">About you</h2>'+btn(ic('edit',16)+'Edit','go','setup','text-btn')+'</div><p style="margin:0">'+(p ? esc(p) : '<span class="muted">Not set</span>')+'</p></section>'+
+    '<section class="card"><h2 class="section-label">Your data</h2><p style="margin:0 0 14px" class="muted">Everything is saved in this browser on this device. If you clear your browsing data or switch phones, it won’t come with you, so keep a backup.</p>'+
+      '<div style="display:flex;flex-direction:column;gap:8px">'+btn(ic('download',20)+'Download a backup','backup',null,'btn sm quiet')+btn('Restore from a backup','restore',null,'btn sm quiet')+'</div></section>'+
+    '<section class="card"><h2 class="section-label">Start again</h2><p style="margin:0 0 14px" class="muted">Deletes your name, age and every appointment from this device. This can’t be undone.</p>'+
+      btn(ui.confirm === 'wipe' ? 'Tap again to delete everything' : 'Delete all my data','wipe',null,'btn sm outline',' style="--primary:#9B2C2C"')+'</section>'+
+    '<p class="note">Heard helps you prepare and communicate. It doesn’t diagnose or give medical advice. If you’re very unwell, call 999. For urgent advice, call NHS 111.</p>'+
+  '</div></div>';
+};
+
+/* ---------- prep steps ---------- */
+function stepShell(step, inner, opts){
+  opts = opts || {};
+  var m = MACRO[step];
+  return '<div class="screen'+(opts.night?' night':'')+'">'+
+  topbar(backBtn('prev'),'Step '+m+' of 6 · '+MACRO_NAME[m], btn('Save &amp; exit','exit',null,'text-btn'))+
+  progress(step)+
+  '<div class="content">'+inner+'</div>'+
+  footer(btn(opts.next || 'Next','next'), opts.noSkip ? '' : btn(opts.skip || 'Skip this step','next',null,'skip'))+
+  '</div>';
+}
+var S = {};
+S.type = function(a){
+  return stepShell('type',
+    '<div>'+h1('What’s the appointment for?')+'<p class="lede">Pick the closest. It just helps us suggest the right questions.</p></div>'+
+    '<fieldset><legend class="sr-only">Appointment type</legend><div class="radio-list">'+
+    TYPES.map(function(t){ return '<label class="radio-card"><input type="radio" name="type" value="'+t.id+'" data-set="a.type"'+(a.type===t.id?' checked':'')+'><span><span class="t">'+t.label+'</span><span class="d">'+t.desc+'</span></span></label>'; }).join('')+
+    '</div></fieldset>', {next:'Continue', skip:'Skip for now'});
+};
+S.when = function(a){
+  return stepShell('when',
+    '<div>'+h1('When is it?')+'<p class="lede">Not booked yet? Skip this and come back later.</p></div>'+
+    '<div class="row" style="gap:12px"><div style="flex:1.4;min-width:0"><label class="label" for="d">Date</label><input class="field" id="d" type="date" data-bind="a.date" value="'+esc(a.date)+'"></div>'+
+    '<div style="flex:1;min-width:0"><label class="label" for="tm">Time</label><input class="field" id="tm" type="time" data-bind="a.time" value="'+esc(a.time)+'"></div></div>'+
+    '<fieldset><legend class="label">How is it happening?</legend><div class="seg">'+
+      ['In person','Phone','Video'].map(function(x){ return '<button type="button" aria-pressed="'+(a.mode===x)+'" data-act="setMode" data-arg="'+x+'">'+x+'</button>'; }).join('')+
+    '</div><p class="help">On a call? Your summary can read itself aloud for you.</p></fieldset>'+
+    '<div><label class="label" for="who">Who’s it with? <span class="opt">(optional)</span></label><input class="field" id="who" type="text" data-bind="a.who" value="'+esc(a.who)+'" placeholder="e.g. GP, practice nurse"></div>'+
+    '<div>'+btn(ic('cal',20)+'Add to my calendar','ics','appt','btn sm quiet')+'<p class="help">The calendar entry just says “Appointment”, with a reminder the evening before to look over your notes.</p></div>',
+    {next:'Continue', skip:'Skip for now'});
+};
+S.what = function(a){
+  var all = SYMPTOMS.concat(a.what.chips.filter(function(c){ return SYMPTOMS.indexOf(c) < 0; }));
+  return stepShell('what',
+    '<div style="display:flex;flex-direction:column;gap:10px">'+lock('Only on this device')+h1('What’s been happening?')+'<p class="lede" style="margin:0">Say it however it comes out. You can tidy it up later, or not.</p></div>'+
+    '<div><label class="label" for="w">In your own words</label><textarea class="field" id="w" rows="4" data-bind="a.what.text" placeholder="e.g. My periods have got really heavy and the pain is worse than it used to be.">'+esc(a.what.text)+'</textarea>'+
+    '<p class="help">Tip: tap the microphone on your keyboard to talk instead of typing.</p></div>'+
+    '<fieldset><legend class="label">Or tap anything that fits</legend><div class="chips">'+
+      all.map(function(c){ return chip(c, a.what.chips.indexOf(c) >= 0, 'toggleIn', 'what.chips|'+c); }).join('')+
+      (ui.addingChip ? '' : '<button type="button" class="chip add" data-act="showAddChip">'+ic('plus',16,2.4)+'Add your own</button>')+
+    '</div>'+(ui.addingChip ? '<div class="row" style="margin-top:10px"><label class="sr-only" for="newChip">Add your own symptom</label><input class="field" id="newChip" type="text" data-bind="ui.newChip" data-enter="addChip" placeholder="Describe it in a few words">'+btn(ic('plus',22,2.2),'addChip',null,'icon-btn filled',' aria-label="Add symptom" style="width:50px;height:50px;border-radius:14px"')+'</div>' : '')+'</fieldset>',
+    {skip:'Skip symptoms'});
+};
+S.timing = function(a){
+  var t = a.timing;
+  return stepShell('timing',
+    h1('When did it start, and how often?')+
+    '<fieldset><legend class="label">When did you first notice it?</legend><div class="chips">'+SINCE.map(function(x){ return chip(x, t.since===x, 'setVal', 'timing.since|'+x); }).join('')+'</div>'+
+    '<label class="label" for="r" style="margin-top:14px;font-weight:600">Roughly when? <span class="opt">(optional)</span></label><input class="field" id="r" type="text" data-bind="a.timing.roughly" value="'+esc(t.roughly)+'" placeholder="e.g. around last summer"></fieldset>'+
+    '<fieldset><legend class="label">How often does it happen?</legend><div class="chips">'+OFTEN.map(function(x){ return chip(x, t.often===x, 'setVal', 'timing.often|'+x); }).join('')+'</div></fieldset>'+
+    '<fieldset><legend class="label">Is it changing?</legend><div class="seg">'+TREND.map(function(x){ return '<button type="button" aria-pressed="'+(t.trend===x)+'" data-act="setVal" data-arg="timing.trend|'+x+'">'+x+'</button>'; }).join('')+'</div></fieldset>'+
+    '<p class="tip">A rough idea is plenty. No need to be exact.</p>',
+    {skip:'Skip this question'});
+};
+function scale(path, val, label){
+  var b = '';
+  for (var i=1;i<=5;i++) b += '<button type="button" aria-pressed="'+(val===i)+'" aria-label="'+i+', '+SEV[i]+'" data-act="setNum" data-arg="'+path+'|'+i+'">'+i+'</button>';
+  return '<fieldset><legend class="label">'+label+'</legend><div class="scale">'+b+'</div><div class="scale-ends" aria-hidden="true"><span>Barely there</span><span>Worst I’ve felt</span></div><p class="scale-word">'+(val ? val+' of 5 · '+SEV[val] : '')+'</p></fieldset>';
+}
+S.severity = function(a){
+  var s = a.severity;
+  return stepShell('severity',
+    '<div>'+h1('How bad does it get?')+'<p class="lede">Describe your bad days honestly. That’s often what clinicians most need to hear.</p></div>'+
+    scale('severity.typical', s.typical, 'On a typical day')+
+    scale('severity.bad', s.bad, 'On a bad day')+
+    '<fieldset><legend class="label">What helps, even a bit?</legend><div class="chips">'+HELPS.map(function(x){ return chip(x, s.helps.indexOf(x)>=0, 'toggleIn', 'severity.helps|'+x); }).join('')+'</div></fieldset>'+
+    '<fieldset><legend class="label">What makes it worse?</legend><div class="chips">'+WORSE.map(function(x){ return chip(x, s.worse.indexOf(x)>=0, 'toggleIn', 'severity.worse|'+x); }).join('')+'</div></fieldset>'+
+    '<div><label class="label" for="so">Anything else? <span class="opt">(optional)</span></label><input class="field" id="so" type="text" data-bind="a.severity.other" value="'+esc(s.other)+'" placeholder="e.g. worse first thing in the morning"></div>',
+    {skip:'Skip this question'});
+};
+S.hard = function(a){
+  var notes = a.hard.map(function(n){
+    var t = TOPICS[n.topic] || TOPICS.write;
+    return '<article class="notecard"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3 style="margin:0;font-size:.8125rem;letter-spacing:.04em;text-transform:uppercase;color:#D8C6CF">'+esc(t.label)+'</h3>'+
+      '<div style="display:flex">'+btn(ic('edit',18),'editNote',n.id,'icon-btn',' aria-label="Edit note"')+btn(ic('trash',18),'delNote',n.id,'icon-btn',' aria-label="'+(ui.confirm===n.id?'Tap again to delete note':'Delete note')+'"'+(ui.confirm===n.id?' style="background:#9B2C2C"':''))+'</div></div>'+
+      '<p style="margin:0">'+esc(n.text)+'</p>'+
+      '<label class="switch" style="background:#33192B"><span style="font-size:.9375rem;font-weight:600">'+(n.include ? 'In my summary' : 'Just for me')+'</span><input type="checkbox" role="switch" data-act="toggleInclude" data-arg="'+n.id+'"'+(n.include?' checked':'')+'></label></article>';
+  }).join('');
+  return stepShell('hard',
+    '<div style="display:flex;flex-direction:column;gap:10px">'+lock('Just for you, unless you choose to share')+h1('The hard-to-say bit')+
+    '<p class="lede" style="margin:0">Some things are hard to say out loud, even to a doctor. Clinicians hear about all of this every day, so nothing here will shock them.</p></div>'+
+    (a.hard.length ? '<section aria-labelledby="yn"><h2 class="section-label" id="yn">Your notes</h2><div style="display:flex;flex-direction:column;gap:10px">'+notes+'</div></section>'
+      : '<div style="padding:18px;border-radius:20px;border:1.5px dashed #7A5470"><p style="margin:0;font-weight:600">Nothing here yet</p><p style="margin:4px 0 0;color:#D8C6CF;font-size:.9375rem">Pick a topic and we’ll help with the words, or just start writing.</p></div>')+
+    '<section aria-labelledby="tp"><h2 class="section-label" id="tp">'+(a.hard.length ? 'Add another' : 'Topics')+'</h2><div class="topics">'+
+      Object.keys(TOPICS).map(function(k){ return '<button type="button" class="'+(k==='write'?'ghost':'')+'" data-act="openTopic" data-arg="'+k+'">'+(k==='write'?ic('edit',16,2.2):'')+esc(TOPICS[k].label)+'</button>'; }).join('')+
+    '</div></section>',
+    {night:true, next:'Continue', skip:'Skip for now, that’s fine too'});
+};
+V.topic = function(){
+  var d = ui.draft, t = TOPICS[d.topic] || TOPICS.write;
+  var phrases = t.phrases.length ? t.phrases.concat([HARD_WORDS]) : [];
+  return '<div class="screen night">'+
+  topbar('<button type="button" class="text-btn" data-act="closeTopic">'+ic('back')+'Topics</button>','',lock('Private'))+
+  '<div class="content">'+
+    '<div>'+h1(esc(t.label))+'<p class="lede">'+esc(t.reassure)+'</p></div>'+
+    (t.crisis ? '<p class="crisis">If you feel unsafe or might act on thoughts of harming yourself, call 999. You can also call NHS 111 and choose the mental health option, or Samaritans free on 116 123, any time.</p>' : '')+
+    (phrases.length ? '<section aria-labelledby="wy"><h2 class="label" id="wy">Words you could use</h2><p class="help" style="margin:-4px 0 10px">Tap to add to your note. Tap again to take it out.</p><div style="display:flex;flex-direction:column;gap:8px">'+
+      phrases.map(function(p,i){ var on = (d.text||'').indexOf(p) >= 0; return '<button type="button" class="phrase" aria-pressed="'+on+'" data-act="phrase" data-arg="'+i+'">'+(on ? '<span style="color:#E7B9A3;display:flex">'+ic('check',18,2.6)+'</span>' : '<span style="color:#D8C6CF;display:flex">'+ic('plus',18,2.2)+'</span>')+'<span>“'+esc(p)+'”</span></button>'; }).join('')+
+      '</div>'+(t.word ? '<p class="help" style="margin-top:12px">You might hear <strong style="color:#F5EFE6">'+t.word[0]+'</strong>. It’s just '+t.word[1]+'. You don’t need to use it.</p>' : '')+'</section>' : '')+
+    '<div><label class="label" for="nt">Your note</label><textarea class="field" id="nt" rows="4" data-bind="ui.draft.text" placeholder="Write it however you like. Nobody else sees this unless you choose.">'+esc(d.text)+'</textarea></div>'+
+    '<label class="switch"><span style="display:flex;flex-direction:column"><span style="font-weight:600">Include in my summary</span><span style="font-size:.8125rem;color:#D8C6CF">Off keeps it here, just for you</span></span><input type="checkbox" role="switch" data-bind="ui.draft.include"'+(d.include?' checked':'')+'></label>'+
+  '</div>'+
+  footer(btn('Save note','saveNote'))+
+  '</div>';
+};
+function ensureQuestions(a){
+  var t = a.type || 'other';
+  if (a.questions && a.qType === t) return;
+  var keep = (a.questions || []).filter(function(q){ return q.own || q.starred; });
+  var have = keep.map(function(q){ return q.text; });
+  var add = (QUESTIONS[t] || QUESTIONS.other).filter(function(x){ return have.indexOf(x) < 0; }).map(function(x){ return {id:uid(), text:x, starred:false, own:false}; });
+  a.questions = keep.filter(function(q){ return !q.own; }).concat(add).concat(keep.filter(function(q){ return q.own; }));
+  a.qType = t;
+}
+function qrow(q, mine){
+  return '<div class="qrow'+(q.starred?' on':'')+'"><p>'+esc(q.text)+'</p>'+
+    (mine ? btn(ic('trash',18),'removeQ',q.id,'icon-btn',' aria-label="Remove question" style="color:var(--soft)"') : '')+
+    '<button type="button" class="icon-btn star" aria-pressed="'+q.starred+'" aria-label="'+(q.starred?'Unstar':'Star')+': '+esc(q.text)+'" data-act="star" data-arg="'+q.id+'">'+ic('star',22,1.7,q.starred?'currentColor':'none')+'</button></div>';
+}
+S.questions = function(a){
+  ensureQuestions(a);
+  var n = starred(a).length, t = typeOf(a);
+  var sugg = a.questions.filter(function(q){ return !q.own; }), own = a.questions.filter(function(q){ return q.own; });
+  return stepShell('questions',
+    '<div>'+h1('What do you want to ask?')+'<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:8px"><p class="lede" style="margin:0">Star your top 3 so they don’t get lost.</p><span class="badge">'+n+' of 3 starred</span></div></div>'+
+    '<section aria-labelledby="sq"><h2 class="section-label" id="sq">Suggested'+(t ? ' for '+esc(t.label.toLowerCase().replace('gp','GP')) : '')+'</h2><div class="qlist">'+sugg.map(function(q){ return qrow(q,false); }).join('')+'</div></section>'+
+    '<section aria-labelledby="oq"><h2 class="section-label" id="oq">Your own</h2><div class="qlist">'+own.map(function(q){ return qrow(q,true); }).join('')+
+      '<div class="row"><label class="sr-only" for="nq">Add your own question</label><input class="field" id="nq" type="text" data-bind="ui.newQ" data-enter="addQ" placeholder="Add your own question…">'+btn(ic('plus',22,2.2),'addQ',null,'icon-btn filled',' aria-label="Add question" style="width:50px;height:50px;border-radius:14px"')+'</div></div></section>',
+    {skip:'Skip this step'});
+};
+S.impact = function(a){
+  var head = '<span></span>'+LEVELS.map(function(l){ return '<span class="h" aria-hidden="true">'+l+'</span>'; }).join('');
+  var rows = IMPACT.map(function(r){
+    var v = a.impact[r[0]];
+    return '<span class="r" id="ir-'+r[0]+'">'+r[1]+'</span>'+LEVELS.map(function(l,i){ return '<button type="button" aria-pressed="'+(v===i)+'" aria-label="'+r[1]+': '+l.toLowerCase()+'" data-act="setNum" data-arg="impact.'+r[0]+'|'+i+'">'+(v===i?ic('check',18,2.8):'')+'</button>'; }).join('');
+  }).join('');
+  return stepShell('impact',
+    '<div>'+h1('How is it affecting your life?')+'<p class="lede">This helps clinicians see how much it matters. No need to be brave about it.</p></div>'+
+    '<div class="impact">'+head+rows+'</div>'+
+    '<div><label class="label" for="ex">An example, in your words <span class="opt">(optional)</span></label><textarea class="field" id="ex" rows="3" data-bind="a.impact.example" placeholder="e.g. I’ve had to leave work early on the first day of my period.">'+esc(a.impact.example)+'</textarea></div>',
+    {next:'See my summary'});
+};
+V.step = function(){ var a = cur(); if (!a) { ui.route = 'home'; return V.home(); } return S[ui.step](a); };
+
+/* ---------- summary ---------- */
+function timelineItems(a){
+  var t = a.timing, items = [];
+  if (t.since || t.roughly) items.push([t.roughly ? t.roughly.charAt(0).toUpperCase()+t.roughly.slice(1) : t.since, 'First noticed it']);
+  if (t.often) items.push(['How often', t.often]);
+  if (t.trend) items.push(['Now', t.trend === 'Worse' ? 'Getting worse' : t.trend === 'Better' ? 'Getting better' : 'About the same']);
+  return items;
+}
+function editLink(step){ return btn(ic('edit',16)+'Edit','editStep',step,'text-btn',' style="min-height:36px;font-size:.875rem"'); }
+V.summary = function(){
+  var a = cur(); if (!a) { ui.route='home'; return V.home(); }
+  var st = starred(a), others = (a.questions||[]).length - st.length;
+  var tl = timelineItems(a), s = a.severity;
+  var lvl = IMPACT.filter(function(r){ return a.impact[r[0]] != null; }).sort(function(x,y){ return a.impact[y[0]] - a.impact[x[0]]; });
+  var shared = a.hard.filter(function(n){ return n.include; }), priv = a.hard.length - shared.length;
+  var empty = function(step, txt){ return '<p class="muted" style="margin:6px 0 0">'+txt+' '+btn('Add','editStep',step,'text-btn',' style="min-height:36px;padding:0;display:inline-flex"')+'</p>'; };
+  var meta = [typeLabel(a), a.date ? fmtDate(a.date) : '', a.time, a.mode].filter(Boolean).join(' · ');
+  return '<div class="screen">'+
+  topbar(backBtn('go','home','Back to home'),'Your summary',btn('Done','go','home','text-btn'))+
+  '<div class="content" style="gap:12px">'+
+    '<div style="margin-bottom:8px"><p style="margin:0 0 6px;font-weight:600;color:var(--sage-d);display:flex;gap:6px;align-items:center">'+ic('check',18,2.6)+'You’re ready</p>'+h1('Your summary')+'<p class="lede" style="margin-top:6px">'+esc(meta)+'</p></div>'+
+    '<div class="act-grid" style="margin-bottom:8px">'+
+      btn(ic('phone',20)+'Show my clinician','go','clinician','btn wide')+
+      '<button type="button" class="tile" data-act="readAloud">'+ic(ui.speaking?'stop':'speaker',20)+(ui.speaking?'Stop reading':'Read aloud')+'</button>'+
+      '<button type="button" class="tile" data-act="pdf">'+ic('download',20)+'Save as PDF</button>'+
+    '</div>'+
+    '<section class="card"><label class="section-label" for="mn" style="display:block">Why I’m here, in one line</label><textarea class="field" id="mn" rows="2" data-bind="a.main" placeholder="e.g. Heavy, painful periods that are getting worse." style="min-height:64px;font-family:\'Fraunces\',Georgia,serif;font-size:1.125rem">'+esc(mainText(a))+'</textarea></section>'+
+    '<section class="card"><div class="card-head"><h2 class="section-label">My top 3 questions</h2>'+editLink('questions')+'</div>'+
+      (st.length ? '<ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px">'+st.map(function(q,i){ return '<li style="display:flex;gap:12px"><span style="flex-shrink:0;width:26px;height:26px;border-radius:13px;background:var(--clay-t);color:var(--clay-dd);font-size:.875rem;font-weight:700;display:flex;align-items:center;justify-content:center">'+(i+1)+'</span>'+esc(q.text)+'</li>'; }).join('')+'</ol>'+(others>0?'<p class="muted" style="margin:10px 0 0;font-size:.875rem">+ '+others+' more question'+(others>1?'s':'')+'</p>':'')
+        : empty('questions','No starred questions yet.'))+'</section>'+
+    '<section class="card"><div class="card-head"><h2 class="section-label">What’s happening</h2>'+editLink('what')+'</div>'+
+      (a.what.chips.length ? '<div class="chips" style="gap:6px">'+a.what.chips.map(function(c){ return '<span style="padding:6px 12px;border-radius:999px;background:var(--plum-t);color:var(--plum-d);font-size:.875rem;font-weight:600">'+esc(c)+'</span>'; }).join('')+'</div>' : '')+
+      (a.what.text ? '<p style="margin:12px 0 0">“'+esc(a.what.text)+'”</p>' : '')+
+      (tl.length ? '<ol class="timeline" aria-label="Timeline">'+tl.map(function(x){ return '<li><div class="dot" aria-hidden="true"><b></b><i></i></div><div><p class="k">'+esc(x[0])+'</p><p class="v">'+esc(x[1])+'</p></div></li>'; }).join('')+'</ol>' : '')+
+      ((s.typical||s.bad||s.helps.length||s.worse.length||s.other) ? '<dl class="dl">'+
+        (s.typical ? '<dt>Typical day</dt><dd>'+s.typical+'/5 · '+SEV[s.typical]+'</dd>' : '')+
+        (s.bad ? '<dt>Bad day</dt><dd>'+s.bad+'/5 · '+SEV[s.bad]+'</dd>' : '')+
+        (s.helps.length ? '<dt>Helps</dt><dd style="font-weight:400">'+esc(listJoin(s.helps))+'</dd>' : '')+
+        (s.worse.length ? '<dt>Worse</dt><dd style="font-weight:400">'+esc(listJoin(s.worse))+'</dd>' : '')+
+        (s.other ? '<dt>Also</dt><dd style="font-weight:400">'+esc(s.other)+'</dd>' : '')+'</dl>' : '')+
+      (!a.what.chips.length && !a.what.text && !tl.length && !s.typical && !s.bad ? empty('what','Nothing added yet.') : '')+
+    '</section>'+
+    '<section class="card"><div class="card-head"><h2 class="section-label">How it affects my life</h2>'+editLink('impact')+'</div>'+
+      (lvl.length ? '<div class="bars">'+lvl.map(function(r){ var v = a.impact[r[0]]; return '<span>'+r[1]+'</span><span class="bar" aria-hidden="true"><i style="width:'+((v+1)*25)+'%"></i></span><span style="font-weight:600">'+LEVELS[v]+'</span>'; }).join('')+'</div>' : '')+
+      (a.impact.example ? '<p style="margin:12px 0 0">“'+esc(a.impact.example)+'”</p>' : '')+
+      (!lvl.length && !a.impact.example ? empty('impact','Nothing added yet.') : '')+'</section>'+
+    '<section class="hardcard"><div class="card-head"><h2 class="section-label">The hard-to-say bit</h2>'+btn(ic('edit',16)+'Edit','editStep','hard','text-btn',' style="min-height:36px;font-size:.875rem;color:#F5EFE6"')+'</div>'+
+      (shared.length ? shared.map(function(n){ return '<p style="margin:8px 0 0">“'+esc(n.text)+'”</p>'; }).join('') : '<p style="margin:6px 0 0;color:#D8C6CF">Nothing shared'+(a.hard.length?'':' yet')+'.</p>')+
+      (priv ? '<p style="margin:12px 0 0;padding-top:12px;border-top:1px solid #5A3550;font-size:.875rem;color:#D8C6CF;display:flex;gap:6px;align-items:center">'+ic('lock',15,2.2)+priv+' note'+(priv>1?'s':'')+' kept just for you. Your clinician won’t see '+(priv>1?'them':'it')+'.</p>' : '')+'</section>'+
+    '<div style="display:flex;flex-direction:column;gap:4px;margin-top:8px">'+btn(ic('cal',20)+'Add to my calendar','ics','appt','btn sm quiet')+
+      btn(ui.confirm === 'del-'+a.id ? 'Tap again to delete this appointment' : 'Delete this appointment','delAppt',null,'skip danger')+'</div>'+
+    '<p style="margin:8px 0 0;text-align:center;font-size:.8125rem;color:var(--soft)">Stored only on this device. Heard helps you prepare. It doesn’t diagnose or give medical advice.</p>'+
+  '</div></div>';
+};
+function clinicianBody(a){
+  var st = starred(a), rest = (a.questions||[]).filter(function(q){ return !q.starred; });
+  var s = a.severity, t = a.timing, pl = profileLine(), main = mainText(a);
+  var shared = a.hard.filter(function(n){ return n.include; });
+  var lvl = IMPACT.filter(function(r){ return a.impact[r[0]] != null && a.impact[r[0]] > 0; }).sort(function(x,y){ return a.impact[y[0]] - a.impact[x[0]]; });
+  var since = t.roughly || t.since;
+  var rows = a.what.chips.map(function(c){ return '<tr><th scope="row">'+esc(c)+'</th><td>'+esc(since||'')+'</td><td>'+esc(t.often||'')+'</td></tr>'; }).join('');
+  var h = '<div><p class="hello">Hello. I’ve written a few notes so I don’t forget anything. Thank you for reading them.</p>'+
+    '<p class="meta">'+[pl, typeLabel(a), a.date ? fmtDate(a.date, true) : ''].filter(Boolean).map(esc).join(' · ')+'</p></div>';
+  if (main) h += '<section class="boxed"><h2>Main concern</h2><p class="main">'+esc(main)+'</p></section>';
+  if (st.length) h += '<section><h2>What I most want to ask</h2><ol>'+st.map(function(q){ return '<li>'+esc(q.text)+'</li>'; }).join('')+'</ol></section>';
+  if (rows || a.what.text || since || t.trend) {
+    h += '<section><h2>Symptoms</h2>';
+    if (a.what.text) h += '<p class="quote" style="margin-bottom:14px">“'+esc(a.what.text)+'”</p>';
+    if (rows) h += '<table><thead><tr><th scope="col">Symptom</th><th scope="col">Since</th><th scope="col">How often</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    else if (since || t.often) h += '<p style="margin:0">Since: '+esc(since||'not sure')+(t.often?'. How often: '+esc(t.often):'')+'.</p>';
+    var dl = '';
+    if (t.trend) dl += '<dt>Changing</dt><dd>'+(t.trend==='Worse'?'Getting worse':t.trend==='Better'?'Getting better':'About the same')+'</dd>';
+    if (s.typical) dl += '<dt>Typical day</dt><dd>'+s.typical+' of 5, '+SEV[s.typical].toLowerCase()+'</dd>';
+    if (s.bad) dl += '<dt>Bad day</dt><dd>'+s.bad+' of 5, '+SEV[s.bad].toLowerCase()+'</dd>';
+    if (s.helps.length) dl += '<dt>Helps a bit</dt><dd style="font-weight:400">'+esc(listJoin(s.helps))+'</dd>';
+    if (s.worse.length) dl += '<dt>Makes it worse</dt><dd style="font-weight:400">'+esc(listJoin(s.worse))+'</dd>';
+    if (s.other) dl += '<dt>Also</dt><dd style="font-weight:400">'+esc(s.other)+'</dd>';
+    if (dl) h += '<dl class="dl" style="margin-top:16px;font-size:1em">'+dl+'</dl>';
+    h += '</section>';
+  }
+  if (lvl.length || a.impact.example) {
+    h += '<section><h2>How it affects my life</h2>';
+    if (lvl.length) h += '<ul>'+lvl.map(function(r){ return '<li><strong>'+r[1]+':</strong> '+LEVELS[a.impact[r[0]]].toLowerCase()+'</li>'; }).join('')+'</ul>';
+    if (a.impact.example) h += '<p class="quote" style="margin-top:12px">“'+esc(a.impact.example)+'”</p>';
+    h += '</section>';
+  }
+  if (shared.length) h += '<section class="hard"><h2>Something I find hard to say</h2>'+shared.map(function(n){ return '<p class="quote">“'+esc(n.text)+'”</p>'; }).join('<br>')+'</section>';
+  if (rest.length && st.length) h += '<section><h2>Other questions, if there’s time</h2><ul>'+rest.slice(0,6).map(function(q){ return '<li>'+esc(q.text)+'</li>'; }).join('')+'</ul></section>';
+  else if (rest.length && !st.length) h += '<section><h2>Questions I’d like to ask</h2><ol>'+rest.slice(0,6).map(function(q){ return '<li>'+esc(q.text)+'</li>'; }).join('')+'</ol></section>';
+  h += '<p class="foot">Written by the patient with Heard, to help them say what they need to. These are their own words and ratings, not a diagnosis.</p>';
+  return h;
+}
+V.clinician = function(){
+  var a = cur(); if (!a) { ui.route='home'; return V.home(); }
+  return '<div class="screen white">'+
+  '<div class="clin-bar no-print"><span style="font-size:.8125rem;font-weight:600;color:var(--muted)">Clinician view</span><div style="display:flex;gap:6px">'+
+    '<button type="button" class="icon-btn filled" data-act="bigText" aria-pressed="'+ui.big+'" aria-label="Larger text" style="font-weight:700">Aa</button>'+
+    btn('Done','go','summary','btn sm',' style="width:auto;min-height:44px;padding:0 18px"')+'</div></div>'+
+  '<h1 class="sr-only" tabindex="-1">Notes for my clinician</h1>'+
+  '<div class="clin'+(ui.big?' big':'')+'">'+clinicianBody(a)+'</div></div>';
+};
+function summaryText(a){
+  var parts = [], st = starred(a), s = a.severity, t = a.timing;
+  parts.push('Hello. I’ve written a few notes so I don’t forget anything.');
+  var m = mainText(a); if (m) parts.push('My main concern is: ' + m);
+  if (a.what.text) parts.push(a.what.text);
+  if (t.since || t.roughly) parts.push('I first noticed it ' + (t.roughly || t.since).toLowerCase() + '.');
+  if (t.often) parts.push('It happens: ' + t.often.toLowerCase() + '.');
+  if (t.trend === 'Worse') parts.push('It’s getting worse.');
+  if (s.typical) parts.push('On a typical day it’s ' + s.typical + ' out of 5, ' + SEV[s.typical].toLowerCase() + '.');
+  if (s.bad) parts.push('On a bad day it’s ' + s.bad + ' out of 5, ' + SEV[s.bad].toLowerCase() + '.');
+  var lv = IMPACT.filter(function(r){ return a.impact[r[0]] >= 2; }).map(function(r){ return r[1].toLowerCase(); });
+  if (lv.length) parts.push('It’s affecting my ' + listJoin(lv) + ' a lot.');
+  if (a.impact.example) parts.push(a.impact.example);
+  a.hard.filter(function(n){ return n.include; }).forEach(function(n){ parts.push(n.text); });
+  if (st.length) parts.push('The questions I most want to ask are: ' + st.map(function(q,i){ return (i+1) + '. ' + q.text; }).join(' '));
+  return parts.join(' ');
+}
+
+/* ---------- after ---------- */
+V.after = function(){
+  var a = cur(); if (!a) { ui.route='home'; return V.home(); }
+  var st = starred(a), steps = a.after.steps;
+  return '<div class="screen">'+
+  topbar(btn(ic('close',22),'go','home','icon-btn',' aria-label="Close"'),'After · 1 of 2','<span class="spacer"></span>')+
+  '<div class="content">'+
+    '<div><p style="margin:0 0 6px;color:var(--muted)">'+esc(typeLabel(a))+(a.date?' · '+esc(fmtDate(a.date)):'')+'</p>'+h1('How did it go? Jot it down while it’s fresh.')+'</div>'+
+    '<div><label class="label" for="sd">What did they say?</label><textarea class="field" id="sd" rows="4" data-bind="a.after.said" placeholder="In your own words. It doesn’t need to be perfect.">'+esc(a.after.said)+'</textarea></div>'+
+    '<fieldset><legend class="label">Next steps</legend><div class="steps-list">'+
+      steps.map(function(s){ return '<div class="check-row'+(s.done?' done':'')+'"><input type="checkbox" id="s-'+s.id+'" data-act="toggleStep" data-arg="'+s.id+'"'+(s.done?' checked':'')+'><label for="s-'+s.id+'" style="flex:1">'+esc(s.text)+'</label>'+btn(ic('trash',18),'delStep',s.id,'icon-btn',' aria-label="Remove step" style="color:var(--soft)"')+'</div>'; }).join('')+
+      '<div class="row"><label class="sr-only" for="ns">Add a next step</label><input class="field" id="ns" type="text" data-bind="ui.newStep" data-enter="addStep" placeholder="e.g. Book a blood test">'+btn(ic('plus',22,2.2),'addStep',null,'icon-btn filled',' aria-label="Add step" style="width:50px;height:50px;border-radius:14px"')+'</div>'+
+    '</div></fieldset>'+
+    '<div><label class="label" for="fu">Follow-up date <span class="opt">(if there is one)</span></label><div class="row"><input class="field" id="fu" type="date" data-bind="a.after.followUp" value="'+esc(a.after.followUp)+'">'+btn(ic('cal',20),'ics','followup','icon-btn filled',' aria-label="Add follow-up to my calendar" style="width:50px;height:50px;border-radius:14px"')+'</div></div>'+
+    (st.length ? '<fieldset><legend class="label">Did your top questions get answered?</legend><div class="steps-list">'+
+      st.map(function(q){ var on = !!a.after.answered[q.id]; return '<div class="check-row'+(on?' done':'')+'"><input type="checkbox" id="q-'+q.id+'" data-act="toggleAnswered" data-arg="'+q.id+'"'+(on?' checked':'')+'><label for="q-'+q.id+'" style="flex:1;padding:8px 0">'+esc(q.text)+'</label></div>'; }).join('')+
+      '</div><p class="help">Anything left unticked can carry over to your follow-up.</p></fieldset>' : '')+
+  '</div>'+
+  footer(btn('Next','go','heard'))+
+  '</div>';
+};
+V.heard = function(){
+  var a = cur(); if (!a) { ui.route='home'; return V.home(); }
+  var r = a.heard.rating, low = ['Partly','Not really','Not at all'].indexOf(r) >= 0;
+  return '<div class="screen">'+
+  topbar(backBtn('go','after'),'After · 2 of 2','<span class="spacer"></span>')+
+  '<div class="content">'+
+    '<div><svg width="60" height="38" viewBox="0 0 88 56" fill="none" aria-hidden="true"><circle cx="28" cy="28" r="10" fill="#5B2A4A"/><path d="M48 12a22 22 0 0 1 0 32" stroke="#C07A5C" stroke-width="3" stroke-linecap="round"/><path d="M60 4a34 34 0 0 1 0 48" stroke="#C07A5C" stroke-width="2.5" stroke-linecap="round" opacity=".6"/><path d="M72 -2a44 44 0 0 1 0 60" stroke="#C07A5C" stroke-width="2" stroke-linecap="round" opacity=".3"/></svg>'+
+    h1('Did you feel heard?')+'<p class="lede">Just for you. Over time this can help you spot patterns and know when to push for more.</p></div>'+
+    '<fieldset><legend class="sr-only">How heard did you feel?</legend><div class="radio-list">'+
+      HEARD.map(function(x){ return '<label class="radio-card" style="min-height:52px"><input type="radio" name="heard" value="'+x+'" data-set="a.heard.rating"'+(r===x?' checked':'')+'><span class="t" style="font-size:1rem;font-weight:'+(r===x?700:500)+'">'+x+'</span></label>'; }).join('')+
+    '</div></fieldset>'+
+    (low ? '<aside class="note"><p style="margin:0">If you didn’t feel listened to, that matters. You can ask for a second opinion, book with a different clinician, or give feedback to your practice.</p><a href="https://www.nhs.uk/nhs-services/gps/" target="_blank" rel="noopener" class="text-btn" style="padding:0">Your options on nhs.uk '+ic('out',16)+'</a></aside>' : '')+
+    '<div><label class="label" for="hn">Anything you want to remember? <span class="opt">(optional)</span></label><textarea class="field" id="hn" rows="3" data-bind="a.heard.note" placeholder="e.g. Felt rushed at the end, but she listened about the pain.">'+esc(a.heard.note)+'</textarea></div>'+
+  '</div>'+
+  footer(btn('Save','finishHeard'))+
+  '</div>';
+};
+
+/* ---------- actions ---------- */
+function go(route){
+  if (ui.speaking && window.speechSynthesis) { speechSynthesis.cancel(); ui.speaking = false; }
+  ui.route = route; ui.confirm = null; ui.setupErr = route === 'setup' ? ui.setupErr : '';
+  render(true);
+}
+function goStep(step){ var a = cur(); ui.step = step; ui.addingChip = false; if (a && a.status === 'prep') { a.lastStep = step; save(); } go('step'); }
+function toSummary(){ var a = cur(); if (a && a.status === 'prep') { a.status = 'ready'; a.lastStep = 'impact'; } save(); go('summary'); }
+function toggleArr(path, v){ var arr = getPath('a.'+path) || []; var i = arr.indexOf(v); if (i >= 0) arr.splice(i,1); else arr.push(v); setPath('a.'+path, arr); }
+
+var H = {
+  go: function(r){ go(r); },
+  afterPrivacy: function(){ go(db.onboarded ? 'home' : 'setup'); },
+  finishSetup: function(){
+    var p = db.profile || (db.profile = {name:'', age:''});
+    p.name = (p.name||'').trim(); var age = String(p.age||'').trim();
+    if (age && !(/^\d{1,3}$/.test(age) && +age >= 1 && +age <= 120)) { ui.setupErr = 'Please enter your age as a whole number, like 32.'; render(); var el = document.getElementById('age'); if (el) el.focus(); return; }
+    p.age = age; ui.setupErr = '';
+    var editing = db.onboarded; db.onboarded = true; save();
+    go(editing ? 'settings' : 'home'); toast(editing ? 'Saved.' : (p.name ? 'Lovely to meet you, '+p.name+'.' : 'All set.'));
+  },
+  skipSetup: function(){ if (!db.profile) db.profile = {name:'', age:''}; db.onboarded = true; ui.setupErr=''; save(); go('home'); },
+  newAppt: function(){ var a = blankAppt(); db.appts.push(a); ui.apptId = a.id; save(); goStep('type'); },
+  open: function(id){ ui.apptId = id; var a = cur(); goStep(a.lastStep || 'type'); },
+  openSummary: function(id){ ui.apptId = id; go('summary'); },
+  next: function(){ var i = STEPS.indexOf(ui.step); save(); if (i >= STEPS.length - 1) toSummary(); else goStep(STEPS[i+1]); },
+  prev: function(){ var i = STEPS.indexOf(ui.step); if (i <= 0) { save(); go('home'); } else goStep(STEPS[i-1]); },
+  exit: function(){ save(); go('home'); toast('Saved. Pick up whenever you’re ready.'); },
+  editStep: function(step){ ui.apptId = ui.apptId; goStep(step); },
+  setMode: function(v){ cur().mode = v; save(); render(); },
+  setVal: function(arg){ var s = split(arg), p = 'a.'+s[0]; setPath(p, getPath(p) === s[1] ? null : s[1]); save(); render(); },
+  setNum: function(arg){ var s = split(arg), p = 'a.'+s[0], n = Number(s[1]); setPath(p, getPath(p) === n ? null : n); save(); render(); },
+  toggleIn: function(arg){ var s = split(arg); toggleArr(s[0], s[1]); save(); render(); },
+  showAddChip: function(){ ui.addingChip = true; render(); focusId('newChip'); },
+  addChip: function(){ var v = (ui.newChip||'').trim(); if (!v) { focusId('newChip'); return; } var arr = cur().what.chips; if (arr.indexOf(v) < 0) arr.push(v); ui.newChip=''; ui.addingChip=false; save(); render(); },
+  openTopic: function(k){ ui.draft = {id:null, topic:k, text:'', include:true}; go('topic'); },
+  editNote: function(id){ var n = cur().hard.filter(function(x){ return x.id === id; })[0]; if (!n) return; ui.draft = {id:n.id, topic:n.topic, text:n.text, include:n.include}; go('topic'); },
+  closeTopic: function(){ ui.step = 'hard'; go('step'); },
+  phrase: function(i){
+    var t = TOPICS[ui.draft.topic], list = t.phrases.concat([HARD_WORDS]), p = list[+i], txt = ui.draft.text || '';
+    if (txt.indexOf(p) >= 0) txt = txt.replace(p, '').replace(/[ \t]{2,}/g, ' ').trim(); else txt = (txt.trim() ? txt.trim() + ' ' : '') + p;
+    ui.draft.text = txt; render();
+  },
+  saveNote: function(){
+    var d = ui.draft, a = cur(), text = (d.text||'').trim();
+    if (text) {
+      if (d.id) a.hard.forEach(function(n){ if (n.id === d.id) { n.text = text; n.include = !!d.include; } });
+      else a.hard.push({id:uid(), topic:d.topic, text:text, include:!!d.include});
+      save(); toast(d.include ? 'Saved. It’ll go in your summary.' : 'Saved, just for you.');
+    }
+    ui.draft = null; ui.step = 'hard'; go('step');
+  },
+  toggleInclude: function(id){ cur().hard.forEach(function(n){ if (n.id === id) n.include = !n.include; }); save(); render(); },
+  delNote: function(id){ if (ui.confirm !== id) { ui.confirm = id; render(); toast('Tap the bin again to delete.'); return; } var a = cur(); a.hard = a.hard.filter(function(n){ return n.id !== id; }); ui.confirm = null; save(); render(); },
+  star: function(id){
+    var a = cur(), q = a.questions.filter(function(x){ return x.id === id; })[0];
+    if (!q.starred && starred(a).length >= 3) { toast('You’ve starred 3. Unstar one to swap it in.'); return; }
+    q.starred = !q.starred; save(); render();
+  },
+  addQ: function(){ var v = (ui.newQ||'').trim(); if (!v) { focusId('nq'); return; } var a = cur(), canStar = starred(a).length < 3; a.questions.push({id:uid(), text:v, starred:canStar, own:true}); ui.newQ=''; save(); render(); focusId('nq'); if (canStar) toast('Added and starred.'); },
+  removeQ: function(id){ var a = cur(); a.questions = a.questions.filter(function(q){ return q.id !== id; }); save(); render(); },
+  readAloud: function(){
+    if (!('speechSynthesis' in window)) { toast('Read aloud isn’t available in this browser.'); return; }
+    if (ui.speaking) { speechSynthesis.cancel(); ui.speaking = false; render(); return; }
+    var u = new SpeechSynthesisUtterance(summaryText(cur())); u.lang = 'en-GB'; u.rate = 0.95;
+    var v = speechSynthesis.getVoices().filter(function(x){ return /en-GB/i.test(x.lang); })[0]; if (v) u.voice = v;
+    u.onend = u.onerror = function(){ ui.speaking = false; if (ui.route === 'summary') render(); };
+    ui.speaking = true; speechSynthesis.speak(u); render();
+  },
+  pdf: function(){ go('clinician'); setTimeout(function(){ window.print(); }, 350); },
+  bigText: function(){ ui.big = !ui.big; render(); },
+  ics: function(kind){
+    var a = cur(), date = kind === 'followup' ? a.after.followUp : a.date, time = kind === 'followup' ? '' : a.time;
+    if (!date) { toast('Add a date first.'); return; }
+    var d = date.replace(/-/g,''), start, end;
+    if (time) { var dt = new Date(date+'T'+time), e = new Date(dt.getTime() + 30*60000);
+      start = 'DTSTART:'+d+'T'+time.replace(':','')+'00'; end = 'DTEND:'+ymd(e).replace(/-/g,'')+'T'+pad(e.getHours())+pad(e.getMinutes())+'00'; }
+    else { var nd = new Date(date+'T00:00'); nd.setDate(nd.getDate()+1); start = 'DTSTART;VALUE=DATE:'+d; end = 'DTEND;VALUE=DATE:'+ymd(nd).replace(/-/g,''); }
+    var stamp = new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+    var lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Heard//EN','CALSCALE:GREGORIAN','BEGIN:VEVENT','UID:'+a.id+'-'+kind+'@heard.local','DTSTAMP:'+stamp,start,end,
+      'SUMMARY:'+(kind==='followup'?'Follow-up appointment':'Appointment'),'DESCRIPTION:Open Heard to look over your notes.',
+      'BEGIN:VALARM','TRIGGER:-PT12H','ACTION:DISPLAY','DESCRIPTION:Look over your notes in Heard','END:VALARM','END:VEVENT','END:VCALENDAR'];
+    download(kind === 'followup' ? 'follow-up.ics' : 'appointment.ics', lines.join('\r\n'), 'text/calendar');
+    toast('Calendar file downloaded. Open it to add the event.');
+  },
+  after: function(id){ ui.apptId = id; go('after'); },
+  addStep: function(){ var v = (ui.newStep||'').trim(); if (!v) { focusId('ns'); return; } cur().after.steps.push({id:uid(), text:v, done:false}); ui.newStep=''; save(); render(); focusId('ns'); },
+  toggleStep: function(id){ cur().after.steps.forEach(function(s){ if (s.id === id) s.done = !s.done; }); save(); render(); },
+  delStep: function(id){ var a = cur(); a.after.steps = a.after.steps.filter(function(s){ return s.id !== id; }); save(); render(); },
+  toggleAnswered: function(id){ var m = cur().after.answered; m[id] = !m[id]; save(); render(); },
+  finishHeard: function(){ var a = cur(); a.status = 'done'; save(); go('home'); toast('Saved. Look after yourself.'); },
+  followUp: function(id){
+    var old = db.appts.filter(function(x){ return x.id === id; })[0], a = blankAppt();
+    a.type = old.type; a.date = old.after.followUp || ''; a.who = old.who;
+    a.what = {text:old.what.text, chips:old.what.chips.slice()};
+    var carry = starred(old).filter(function(q){ return !old.after.answered[q.id]; });
+    ensureQuestions(a);
+    carry.forEach(function(q){ a.questions.unshift({id:uid(), text:q.text, starred:true, own:true}); });
+    db.appts.push(a); ui.apptId = a.id; save(); goStep('type');
+    toast(carry.length ? 'Started. Your unanswered questions came with you.' : 'Started your follow-up prep.');
+  },
+  delAppt: function(){ var a = cur(), key = 'del-'+a.id; if (ui.confirm !== key) { ui.confirm = key; render(); return; } db.appts = db.appts.filter(function(x){ return x.id !== a.id; }); ui.apptId = null; save(); go('home'); toast('Appointment deleted.'); },
+  backup: function(){ download('heard-backup-'+todayStr()+'.json', JSON.stringify(db, null, 2), 'application/json'); toast('Backup downloaded. Keep it somewhere private.'); },
+  restore: function(){ document.getElementById('restoreFile').click(); },
+  wipe: function(){ if (ui.confirm !== 'wipe') { ui.confirm = 'wipe'; render(); return; } try { localStorage.removeItem(KEY); } catch(e){} db = fresh(); ui.apptId = null; go('welcome'); toast('Everything has been deleted from this device.'); }
+};
+
+document.getElementById('restoreFile').addEventListener('change', function(e){
+  var f = e.target.files && e.target.files[0]; if (!f) return;
+  var r = new FileReader();
+  r.onload = function(){ try { var d = JSON.parse(r.result); if (!d || !Array.isArray(d.appts)) throw 0; d.appts.forEach(normalise); d.onboarded = true; db = d; save(); go('home'); toast('Backup restored.'); } catch(err){ toast('That file doesn’t look like a Heard backup.'); } e.target.value = ''; };
+  r.readAsText(f);
+});
+
+function focusId(id){ setTimeout(function(){ var el = document.getElementById(id); if (el) el.focus(); }, 0); }
+
+/* ---------- events ---------- */
+document.addEventListener('click', function(e){
+  var el = e.target.closest('[data-act]'); if (!el) return;
+  var fn = H[el.getAttribute('data-act')]; if (!fn) return;
+  if (el.tagName !== 'INPUT') e.preventDefault();
+  fn(el.getAttribute('data-arg'), el);
+});
+document.addEventListener('input', function(e){
+  var el = e.target; var path = el.getAttribute && el.getAttribute('data-bind'); if (!path) return;
+  setPath(path, el.type === 'checkbox' ? el.checked : el.value);
+  if (path.indexOf('ui.') !== 0) save();
+});
+document.addEventListener('change', function(e){
+  var el = e.target, path = el.getAttribute && el.getAttribute('data-set');
+  if (path) { setPath(path, el.value); save(); render(); return; }
+  var b = el.getAttribute && el.getAttribute('data-bind');
+  if (b && el.type === 'checkbox') { setPath(b, el.checked); }
+});
+document.addEventListener('keydown', function(e){
+  if (e.key !== 'Enter') return; var el = e.target, act = el.getAttribute && el.getAttribute('data-enter');
+  if (act && H[act]) { e.preventDefault(); H[act](); }
+});
+window.addEventListener('afterprint', function(){ if (ui.route === 'clinician') toast('Tip: choose “Save as PDF” as the printer to keep a copy.'); });
+
+/* ---------- render ---------- */
+function render(newScreen){
+  var view = V[ui.route] || V.home;
+  var y = window.scrollY;
+  document.getElementById('app').innerHTML = view();
+  var night = (ui.route === 'topic') || (ui.route === 'step' && ui.step === 'hard');
+  document.body.classList.toggle('is-night', night);
+  document.body.classList.toggle('is-white', ui.route === 'clinician');
+  var meta = document.querySelector('meta[name=theme-color]'); if (meta) meta.setAttribute('content', night ? '#33192B' : ui.route === 'clinician' ? '#F5EFE6' : '#F5EFE6');
+  if (newScreen) {
+    window.scrollTo(0,0);
+    var h = document.querySelector('h1[tabindex]'); if (h) h.focus({preventScroll:true});
+    document.title = ui.route === 'clinician' ? 'Notes for my clinician' : 'Heard';
+  } else window.scrollTo(0,y);
+}
+render(true);
+})();
+</script>
+</body>
+</html>
