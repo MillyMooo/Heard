@@ -65,6 +65,9 @@ legend{padding:0}
 textarea.field{resize:vertical;min-height:104px;display:block}
 .night .field{border-color:#9C7A92;background:#F5EFE6}
 .row{display:flex;gap:8px;align-items:stretch}
+.field.datetime{display:block;min-width:0;max-width:100%;-webkit-appearance:none;appearance:none;text-align:left}
+.field.datetime::-webkit-date-and-time-value{text-align:left}
+.row input[type="date"]{-webkit-appearance:none;appearance:none;min-width:0}
 .row .field{flex:1;min-width:0}
 
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -133,7 +136,10 @@ textarea.field{resize:vertical;min-height:104px;display:block}
 .switch{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;padding:4px 14px;border-radius:14px;background:var(--paper)}
 .switch input{width:22px;height:22px;flex-shrink:0;accent-color:var(--plum)}
 .night .switch input{accent-color:#E7B9A3}
-.crisis{padding:14px 16px;border-radius:16px;background:#F5EFE6;color:#2B2125;font-size:.9375rem;margin:0}
+.crisis{padding:14px 16px;border-radius:16px;background:#F5EFE6;color:#2B2125;font-size:.9375rem;margin:0;border:2px solid #C07A5C}
+.crisis a{color:#5B2A4A;font-weight:700}
+.group-label{margin:14px 0 8px;font-size:.8125rem;font-weight:600;color:var(--muted)}
+.group-label:first-child{margin-top:0}
 
 .appt{background:var(--paper);border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:12px}
 .appt .t{margin:0;font-size:1.125rem;font-weight:700}
@@ -237,53 +243,105 @@ var P = {
 function ic(name, size, sw, fill){ return svg(P[name], size, sw, fill); }
 
 /* ---------- content ---------- */
+/* body options: only decide what is suggested first. Nothing is ever hidden for good. */
+var BODY = [
+  ['periods','I have periods'],
+  ['vulva','I have a vagina, vulva or cervix'],
+  ['penis','I have a penis and testicles'],
+  ['meno','I’m going through or past menopause']
+];
 var TYPES = [
   {id:'gp', label:'GP appointment', desc:'At your surgery, by phone or video'},
+  {id:'mental', label:'Mental health', desc:'GP, talking therapy or a specialist'},
   {id:'sexual', label:'Sexual health clinic', desc:'Testing, symptoms, PrEP or advice'},
-  {id:'gynae', label:'Gynaecology', desc:'Usually a hospital or specialist referral'},
-  {id:'smear', label:'Smear test', desc:'Cervical screening, usually with a nurse'},
+  {id:'urology', label:'Bladder, prostate or genitals', desc:'Urology, or penis and testicle checks'},
+  {id:'gynae', label:'Gynaecology', desc:'Periods, pelvic pain, womb or ovaries', body:['periods','vulva','meno']},
+  {id:'smear', label:'Smear test', desc:'Cervical screening, usually with a nurse', body:['vulva']},
   {id:'contra', label:'Contraception', desc:'Starting, switching or stopping'},
-  {id:'other', label:'Something else', desc:'Menopause, fertility, anything at all'}
+  {id:'meno', label:'Menopause', desc:'Perimenopause, HRT or symptoms', body:['periods','vulva','meno']},
+  {id:'other', label:'Something else', desc:'Fertility, a long-term condition, anything'}
 ];
 var QUESTIONS = {
   gp:['What could be causing this?','What tests might I need, and what do they involve?','Is there anything I can try in the meantime?','What should I do if it gets worse?','Can I have a chaperone, or choose who examines me?','When should I come back if things don’t improve?'],
+  mental:['What support or treatment options are there for me?','Can I refer myself to talking therapy, and how long is the wait?','What are the pros and cons of medication for me?','What can I do to help myself while I wait?','Who can I contact if things get worse, especially out of hours?','When should we check in on how I’m doing?'],
   sexual:['Which tests do you recommend for me, and why?','How and when will I get my results?','Is there anything I should avoid until I get my results?','Do I need to tell any partners, and can you help with that?','Would PrEP or any vaccinations be useful for me?'],
+  urology:['What could be causing this?','What tests might I need, and what do they involve?','Could this be linked to anything else in my health?','What treatments are there, and what are the side effects?','What should make me come back sooner?'],
   gynae:['What do you think is going on?','What are my treatment options, and their side effects?','Do I need any scans or procedures, and what do they involve?','Could this affect my fertility?','Who do I contact if things get worse before my next appointment?'],
   smear:['Can I have a smaller speculum, or lie in a different position?','Can I bring someone with me, or have a chaperone?','Can I stop at any point if I need to?','When and how will I get my results?','What happens if HPV is found?'],
   contra:['Which methods would suit my health and lifestyle?','What side effects are common, and when should I be worried?','How quickly does it work, and how quickly can I get pregnant if I stop?','What should I do if I miss a dose or something goes wrong?','Does it protect against STIs?'],
+  meno:['Could my symptoms be perimenopause or menopause?','What are my options, including HRT and non-hormonal treatments?','What are the benefits and risks of HRT for me?','How long until I notice a difference?','When should we review how it’s going?'],
   other:['What could be causing this?','What are my options?','What happens next, and when?','Where can I find reliable information about this?']
 };
-var SYMPTOMS = ['Heavy periods','Period pain','Irregular periods','Bleeding between periods','Pelvic pain','Pain during sex','Discharge changes','Itching or soreness','Peeing more often','Pain when peeing','Bloating','Tiredness','Mood changes','Hot flushes'];
+var ALL = '*';
+var SYMPTOM_GROUPS = [
+  {label:'Mind and mood', types:['mental','gp','meno','other'], items:['Low mood','Anxiety or worry','Panic attacks','Not enjoying things','Irritable or angry','Can’t concentrate','Feeling numb','Thoughts that scare me','Changes in eating','Drinking or using more','Thoughts of not wanting to be here']},
+  {label:'General', types:ALL, items:['Tiredness','Trouble sleeping','Pain','Lumps or bumps','Bloating','Weight changes','Dizziness']},
+  {label:'Periods', types:['gp','gynae','contra','meno','other','mental'], body:['periods'], items:['Heavy periods','Period pain','Irregular periods','Bleeding between periods']},
+  {label:'Vulva, vagina and pelvis', types:['gp','gynae','sexual','smear','meno','other'], body:['vulva'], items:['Pelvic pain','Pain during sex','Vaginal discharge changes','Itching or soreness','Vaginal dryness']},
+  {label:'Penis and testicles', types:['gp','sexual','urology','other','mental'], body:['penis'], items:['Erection problems','Pain or lump in a testicle','Discharge from the penis','Pain during sex','Itching or soreness']},
+  {label:'Sexual health', types:['sexual','gp','other'], items:['Sores, blisters or warts','Unusual discharge','Might have been exposed to an STI','Just want a check-up']},
+  {label:'Bladder and bowels', types:['gp','urology','gynae','meno','other'], items:['Peeing more often','Pain when peeing','Trouble starting to pee','Leaking','Blood in pee or poo','Changes in pooing']},
+  {label:'Hormones and menopause', types:['meno','gp','gynae','other','mental'], body:['periods','vulva','meno'], items:['Hot flushes','Night sweats','Brain fog','Joint aches','Low sex drive']}
+];
+var CRISIS_CHIP = 'Thoughts of not wanting to be here';
 var SINCE = ['Days ago','Weeks ago','Months ago','Over a year ago','As long as I can remember'];
 var OFTEN = ['All the time','Most days','A few times a week','With my period','Comes and goes'];
 var TREND = ['Better','Same','Worse'];
 var SEV = ['','Barely there','Noticeable','Hard to ignore','Stops me doing things','The worst I’ve felt'];
 var HELPS = ['Heat','Rest','Lying down','Painkillers','Moving about','Nothing helps'];
 var WORSE = ['Moving about','Sitting','Stress','Sex','Food','Around my period'];
-var IMPACT = [['work','Work or study'],['sleep','Sleep'],['sex','Sex and intimacy'],['mood','Mood'],['exercise','Exercise'],['social','Social life']];
+var HELPS_MIND = ['Talking to someone','Getting outside','Exercise','Routine','Rest','Nothing helps'];
+var WORSE_MIND = ['Stress','Poor sleep','Being alone','Work','Social situations','Alcohol'];
+var IMPACT = [['work','Work or study'],['sleep','Sleep'],['sex','Sex and intimacy'],['mood','Mood'],['exercise','Exercise'],['social','Social life'],['care','Looking after myself']];
 var LEVELS = ['Not at all','A little','A lot','Hugely'];
 var HEARD = ['Yes, completely','Mostly','Partly','Not really','Not at all'];
 var HARD_WORDS = 'I find this hard to talk about, so I’ve written it down.';
+/* phrases: a string, or [text, bodyTag] for body specific wording */
 var TOPICS = {
-  periods:{label:'Periods & bleeding', reassure:'Heavy or painful periods are common, but that doesn’t mean you have to put up with them.',
+  thoughts:{label:'Thoughts I’m scared to say', types:['mental','gp','meno','other'], crisis:true,
+    reassure:'GPs hear this often. Saying it is how you get the right support, and they’ll want to help, not judge.',
+    phrases:['Sometimes I think about not being here.','I’ve had thoughts of hurting myself.','I have thoughts that scare me and I don’t know why.','I’m worried about what happens if I tell you this.']},
+  mood:{label:'Mood & coping', types:ALL, crisis:true,
+    reassure:'How you’re feeling matters as much as any physical symptom.',
+    phrases:['I’ve been struggling with how I’m feeling.','I’m finding it hard to cope day to day.','I’ve stopped enjoying things I used to.','I feel like I haven’t been taken seriously before.']},
+  substances:{label:'Drinking, drugs or gambling', types:['mental','gp','sexual','other'],
+    reassure:'Being honest about this helps your clinician keep you safe, especially with any medication.',
+    phrases:['I’m drinking more than I’d like to.','I’ve been using drugs to cope.','I’ve lost control of my gambling or spending.','I want help cutting down.']},
+  eating:{label:'Food & body image', types:['mental','gp','other'],
+    reassure:'Worries about food and your body deserve proper support, whatever your size or shape.',
+    phrases:['I’m worried about my relationship with food.','I think about my weight or body a lot, and it’s affecting me.','My eating has changed in a way that worries me.']},
+  periods:{label:'Periods & bleeding', types:['gp','gynae','contra','meno','other'], body:['periods'],
+    reassure:'Heavy or painful periods are common, but that doesn’t mean you have to put up with them.',
     phrases:['My periods are so heavy I bleed through pads or tampons.','I’m bleeding between periods, or after sex.','My period pain stops me doing normal things.','My cycle has changed and I don’t know why.'],
     word:['menorrhagia','the medical word for heavy periods']},
-  sex:{label:'Sex & pain during sex', reassure:'Pain during sex is common, and it’s treatable. You deserve to have it taken seriously.',
-    phrases:['It hurts when I have sex, and it’s been going on for a while.','The pain feels deep inside, not at the entrance.','The pain is at the entrance when anything goes in.','I sometimes bleed afterwards.','It’s affecting my relationship and I’d like help with it.'],
+  sex:{label:'Sex & pain during sex', types:ALL,
+    reassure:'Problems with sex are common, and most are treatable. You deserve to have them taken seriously.',
+    phrases:['It hurts when I have sex, and it’s been going on for a while.',['The pain feels deep inside, not at the entrance.','vulva'],['The pain is at the entrance when anything goes in.','vulva'],'I sometimes bleed afterwards.','It’s affecting my relationship and I’d like help with it.','My sex drive has changed and I don’t know why.'],
     word:['dyspareunia','the medical word for pain during sex']},
-  discharge:{label:'Discharge or smell', reassure:'Clinicians talk about discharge all the time. Colour, smell and amount are really useful to describe.',
-    phrases:['My discharge has changed in colour, smell or amount.','I’ve noticed a smell that worries me.','I’m itchy or sore down there.','It keeps coming back after treatment.']},
-  bladder:{label:'Bladder & bowels', reassure:'Leaks and bowel changes are really common, and there’s a lot that can help.',
-    phrases:['I leak a bit of wee when I cough, laugh or exercise.','I need to go much more often, or very suddenly.','It hurts or burns when I pee.','Pooing is painful, or has changed.'],
-    word:['stress incontinence','leaking a little wee when you cough, laugh or exercise']},
-  meno:{label:'Menopause & hormones', reassure:'Symptoms can start years before your periods stop, and you can ask for help at any point.',
+  erections:{label:'Erections & sexual function', types:['gp','sexual','urology','mental','other'], body:['penis'],
+    reassure:'Erection problems are really common, and they can be an early sign of other things worth checking, like heart health.',
+    phrases:['I’m having trouble getting or keeping an erection.','I come too quickly, or can’t come at all.','It’s knocking my confidence and my relationship.','My sex drive has changed and I don’t know why.'],
+    word:['erectile dysfunction','the medical term for erection problems']},
+  testes:{label:'Penis & testicles', types:['gp','sexual','urology','other'], body:['penis'],
+    reassure:'Clinicians check these every day. Getting a change looked at early is always the right call.',
+    phrases:['I’ve found a lump or swelling on a testicle.','I’ve noticed a change in how my penis looks or feels.','It’s painful down there.','I’ve been putting off getting this checked.']},
+  discharge:{label:'Discharge, itching or smell', types:['gp','sexual','gynae','smear','urology','other'],
+    reassure:'Clinicians talk about this all the time. Colour, smell and amount are really useful to describe.',
+    phrases:['I’ve noticed unusual discharge.','There’s a smell that worries me.','I’m itchy or sore down there.','It keeps coming back after treatment.']},
+  bladder:{label:'Bladder & bowels', types:['gp','urology','gynae','meno','other'],
+    reassure:'Leaks and bowel changes are really common, and there’s a lot that can help.',
+    phrases:['I leak a bit of wee when I cough, laugh or exercise.','I need to go much more often, or very suddenly.','It hurts or burns when I pee.',['My flow is weak, or it’s hard to start.','penis'],'Pooing is painful, or has changed.','I’ve seen blood in my pee or poo.']},
+  exam:{label:'Worries about being examined', types:['smear','gynae','sexual','urology','gp'],
+    reassure:'You’re in charge of an examination. You can ask questions, ask for a chaperone, or ask to stop.',
+    phrases:['I’m nervous about being examined.','I’ve had a bad experience before.','I find examinations painful.','Something in my past makes this hard, and I may need to go slowly.']},
+  meno:{label:'Menopause & hormones', types:['gp','gynae','meno','mental','other'], body:['periods','vulva','meno'],
+    reassure:'Symptoms can start years before periods stop, and you can ask for help at any point.',
     phrases:['I think I might be perimenopausal.','My mood, sleep or memory have changed and I’m not sure why.','I’m having hot flushes or night sweats.','I’d like to talk about HRT.'],
     word:['perimenopause','the years leading up to your last period']},
-  mood:{label:'Mood & coping', reassure:'How you’re feeling matters as much as any physical symptom.', crisis:true,
-    phrases:['I’ve been struggling with how I’m feeling.','This is affecting my mental health.','I’m finding it hard to cope day to day.','I feel like I haven’t been taken seriously before.']},
-  preg:{label:'Pregnancy & fertility', reassure:'Whatever you’re hoping for or worried about, you can say it plainly.',
-    phrases:['We’ve been trying to get pregnant for a while.','I’m worried I might be pregnant.','I’d like to talk about my options.','I’ve had a loss and I’m not sure what to ask.']},
-  write:{label:'Just write', reassure:'No prompts, just space to get it down in your own words.', phrases:[]}
+  preg:{label:'Pregnancy & fertility', types:['gp','gynae','contra','sexual','other'],
+    reassure:'Whatever you’re hoping for or worried about, you can say it plainly.',
+    phrases:['We’ve been trying for a baby for a while.',['I’m worried I might be pregnant.','vulva'],'I’d like to talk about our options.','We’ve had a loss and I’m not sure what to ask.']},
+  write:{label:'Just write', types:ALL, reassure:'No prompts, just space to get it down in your own words.', phrases:[]}
 };
 var STEPS = ['type','when','what','timing','severity','hard','questions','impact'];
 var MACRO = {type:1,when:1,what:2,timing:2,severity:2,hard:3,questions:4,impact:5};
@@ -319,7 +377,7 @@ function normalise(a){
   return a;
 }
 var db = load();
-var ui = { route: !db.onboarded ? 'welcome' : 'home', step:'type', apptId:null, draft:null, newChip:'', addingChip:false, newQ:'', newStep:'', confirm:null, speaking:false, big:false, setupErr:'', from:null };
+var ui = { route: !db.onboarded ? 'welcome' : 'home', step:'type', apptId:null, draft:null, newChip:'', addingChip:false, newQ:'', newStep:'', confirm:null, speaking:false, big:false, setupErr:'', from:null, allTypes:false, allSymptoms:false, allTopics:false, crisisOpen:false };
 
 /* ---------- helpers ---------- */
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
@@ -344,9 +402,28 @@ function resolve(path){
 function getPath(path){ var r = resolve(path), o = r.obj; for (var i=0;i<r.rest.length;i++){ if (o == null) return undefined; o = o[r.rest[i]]; } return o; }
 function setPath(path, val){ var r = resolve(path), o = r.obj; if (!o) return; for (var i=0;i<r.rest.length-1;i++){ if (o[r.rest[i]] == null) o[r.rest[i]] = {}; o = o[r.rest[i]]; } o[r.rest[r.rest.length-1]] = val; }
 function listJoin(arr){ if (!arr.length) return ''; if (arr.length === 1) return arr[0]; return arr.slice(0,-1).join(', ') + ' and ' + arr[arr.length-1]; }
-function autoMain(a){ var c = a.what.chips.slice(0,3).map(function(x,i){ return i ? x.toLowerCase() : x; }); return c.length ? listJoin(c) + '.' : ''; }
+function autoMain(a){ var c = a.what.chips.filter(function(x){ return x !== CRISIS_CHIP; }).slice(0,3).map(function(x,i){ return i ? x.toLowerCase() : x; }); return c.length ? listJoin(c) + '.' : ''; }
 function mainText(a){ return (a.main && a.main.trim()) || autoMain(a); }
 function starred(a){ return (a.questions || []).filter(function(q){ return q.starred; }); }
+function bodyTags(){ return (db.profile && db.profile.body) || []; }
+function bodyMatch(tags){ var b = bodyTags(); if (!tags || !b.length) return true; return tags.some(function(t){ return b.indexOf(t) >= 0; }); }
+function typeMatch(types, t){ return types === ALL || types.indexOf(t || 'gp') >= 0; }
+function isMind(a){ return !!a && a.type === 'mental'; }
+function phrasesFor(t){ return t.phrases.filter(function(p){ return typeof p === 'string' || bodyMatch([p[1]]); }).map(function(p){ return typeof p === 'string' ? p : p[0]; }); }
+function crisisBox(lead){
+  return '<aside class="crisis" aria-label="Urgent support">'+(lead ? '<p style="margin:0 0 10px">'+lead+'</p>' : '')+
+    '<p style="margin:0;font-weight:700">If you need help now</p>'+
+    '<p style="margin:4px 0 0">If you might act on thoughts of harming yourself, or you’re in danger, call <a href="tel:999">999</a> or go to A&amp;E.</p>'+
+    '<ul style="margin:8px 0 0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px">'+
+    '<li>NHS 111, then choose the mental health option: <a href="tel:111">call 111</a></li>'+
+    '<li>Samaritans, free, any time: <a href="tel:116123">116 123</a></li>'+
+    '<li>Shout, if you’d rather text: <a href="sms:85258?&amp;body=SHOUT">text SHOUT to 85258</a></li></ul></aside>';
+}
+function topicKeys(a){
+  var keys = Object.keys(TOPICS).filter(function(k){ return k !== 'write'; });
+  if (!ui.allTopics) keys = keys.filter(function(k){ var t = TOPICS[k]; return typeMatch(t.types, a.type) && bodyMatch(t.body); });
+  return keys.concat(['write']);
+}
 function profileLine(){ var p = db.profile; if (!p) return ''; var n = (p.name||'').trim(), g = String(p.age||'').trim(); if (n && g) return n + ', ' + g; return n || (g ? 'Age ' + g : ''); }
 
 var toastTimer;
@@ -386,7 +463,7 @@ V.welcome = function(){
   '<div class="content" style="gap:14px;padding-top:8px">'+
     '<p class="brand" style="padding:0">Heard</p>'+
     h1('Walk in knowing what you want to say.','xl')+
-    '<p class="lede" style="margin:0;font-size:1.0625rem">Get ready for GP, sexual health and women’s health appointments, so the important stuff doesn’t come to you on the way home.</p>'+
+    '<p class="lede" style="margin:0;font-size:1.0625rem">For the appointments that are hard to talk about. GP, mental health, sexual health and more, so the important stuff doesn’t come to you on the way home.</p>'+
     lock('Private by design. It all stays on this device.')+
   '</div>'+
   footer(btn('Let’s get started','go','privacy'), btn('How Heard keeps things private','go','privacy','skip'))+
@@ -423,6 +500,9 @@ V.setup = function(){
     '<div><label class="label" for="age">How old are you? <span class="opt">(optional)</span></label>'+
     '<input class="field" id="age" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" data-bind="p.age" value="'+esc(p.age)+'" placeholder="e.g. 32" style="max-width:160px"'+(ui.setupErr?' aria-invalid="true" aria-describedby="ageErr"':'')+'>'+
     (ui.setupErr ? '<p class="error" id="ageErr">'+esc(ui.setupErr)+'</p>' : '<p class="help">Clinicians often ask, and some checks and screening depend on age.</p>')+'</div>'+
+    '<fieldset><legend class="label">Which of these apply to you? <span class="opt">(optional)</span></legend>'+
+    '<p class="help" style="margin:-4px 0 12px">Pick any that fit. It only decides which symptoms and topics we suggest first. You can always see everything, and change this any time.</p>'+
+    '<div class="chips">'+BODY.map(function(b){ return chip(b[1], (p.body||[]).indexOf(b[0]) >= 0, 'toggleBody', b[0]); }).join('')+'</div></fieldset>'+
     lock('Saved only on this device. Change or remove it any time.')+
   '</div>'+
   footer(btn(editing ? 'Save' : 'Continue','finishSetup'), editing ? '' : btn('Skip for now','skipSetup',null,'skip'))+
@@ -488,7 +568,8 @@ V.settings = function(){
   topbar(backBtn('go','home'),'Settings','<span class="spacer"></span>')+
   '<div class="content">'+
     h1('Settings & privacy')+
-    '<section class="card"><div class="card-head"><h2 class="section-label">About you</h2>'+btn(ic('edit',16)+'Edit','go','setup','text-btn')+'</div><p style="margin:0">'+(p ? esc(p) : '<span class="muted">Not set</span>')+'</p></section>'+
+    '<section class="card"><div class="card-head"><h2 class="section-label">About you</h2>'+btn(ic('edit',16)+'Edit','go','setup','text-btn')+'</div><p style="margin:0">'+(p ? esc(p) : '<span class="muted">Not set</span>')+'</p>'+
+      (bodyTags().length ? '<p class="muted" style="margin:6px 0 0;font-size:.9375rem">'+esc(BODY.filter(function(b){ return bodyTags().indexOf(b[0]) >= 0; }).map(function(b){ return b[1]; }).join('. '))+'.</p>' : '')+'</section>'+
     '<section class="card"><h2 class="section-label">Your data</h2><p style="margin:0 0 14px" class="muted">Everything is saved in this browser on this device. If you clear your browsing data or switch phones, it won’t come with you, so keep a backup.</p>'+
       '<div style="display:flex;flex-direction:column;gap:8px">'+btn(ic('download',20)+'Download a backup','backup',null,'btn sm quiet')+btn('Restore from a backup','restore',null,'btn sm quiet')+'</div></section>'+
     '<section class="card"><h2 class="section-label">Start again</h2><p style="margin:0 0 14px" class="muted">Deletes your name, age and every appointment from this device. This can’t be undone.</p>'+
@@ -500,11 +581,13 @@ V.settings = function(){
 /* ---------- prep steps ---------- */
 function stepShell(step, inner, opts){
   opts = opts || {};
-  var m = MACRO[step];
+  var m = MACRO[step], mind = isMind(cur()) && step !== 'type';
+  if (step === 'what' && cur().what.chips.indexOf(CRISIS_CHIP) >= 0) mind = false;
+  var help = mind ?'<div style="margin:-6px 0 -8px">'+btn(ui.crisisOpen ? 'Hide urgent support' : 'Need help now?','toggleCrisis',null,'text-btn',' aria-expanded="'+ui.crisisOpen+'" style="padding:0;min-height:40px;text-decoration:underline"')+(ui.crisisOpen ? crisisBox() : '')+'</div>' : '';
   return '<div class="screen'+(opts.night?' night':'')+'">'+
   topbar(backBtn('prev'),'Step '+m+' of 6 · '+MACRO_NAME[m], btn('Save &amp; exit','exit',null,'text-btn'))+
   progress(step)+
-  '<div class="content">'+inner+'</div>'+
+  '<div class="content">'+help+inner+'</div>'+
   footer(btn(opts.next || 'Next','next'), opts.noSkip ? '' : btn(opts.skip || 'Skip this step','next',null,'skip'))+
   '</div>';
 }
@@ -513,14 +596,14 @@ S.type = function(a){
   return stepShell('type',
     '<div>'+h1('What’s the appointment for?')+'<p class="lede">Pick the closest. It just helps us suggest the right questions.</p></div>'+
     '<fieldset><legend class="sr-only">Appointment type</legend><div class="radio-list">'+
-    TYPES.map(function(t){ return '<label class="radio-card"><input type="radio" name="type" value="'+t.id+'" data-set="a.type"'+(a.type===t.id?' checked':'')+'><span><span class="t">'+t.label+'</span><span class="d">'+t.desc+'</span></span></label>'; }).join('')+
-    '</div></fieldset>', {next:'Continue', skip:'Skip for now'});
+    TYPES.filter(function(t){ return ui.allTypes || bodyMatch(t.body) || a.type === t.id; }).map(function(t){ return '<label class="radio-card"><input type="radio" name="type" value="'+t.id+'" data-set="a.type"'+(a.type===t.id?' checked':'')+'><span><span class="t">'+t.label+'</span><span class="d">'+t.desc+'</span></span></label>'; }).join('')+
+    '</div>'+(!ui.allTypes && TYPES.some(function(t){ return !bodyMatch(t.body); }) ? btn('Show all appointment types','showAll','allTypes','skip') : '')+'</fieldset>', {next:'Continue', skip:'Skip for now'});
 };
 S.when = function(a){
   return stepShell('when',
     '<div>'+h1('When is it?')+'<p class="lede">Not booked yet? Skip this and come back later.</p></div>'+
-    '<div class="row" style="gap:12px"><div style="flex:1.4;min-width:0"><label class="label" for="d">Date</label><input class="field" id="d" type="date" data-bind="a.date" value="'+esc(a.date)+'"></div>'+
-    '<div style="flex:1;min-width:0"><label class="label" for="tm">Time</label><input class="field" id="tm" type="time" data-bind="a.time" value="'+esc(a.time)+'"></div></div>'+
+    '<div><label class="label" for="d">Date</label><input class="field datetime" id="d" type="date" data-bind="a.date" value="'+esc(a.date)+'"></div>'+
+    '<div><label class="label" for="tm">Time</label><input class="field datetime" id="tm" type="time" data-bind="a.time" value="'+esc(a.time)+'"></div>'+
     '<fieldset><legend class="label">How is it happening?</legend><div class="seg">'+
       ['In person','Phone','Video'].map(function(x){ return '<button type="button" aria-pressed="'+(a.mode===x)+'" data-act="setMode" data-arg="'+x+'">'+x+'</button>'; }).join('')+
     '</div><p class="help">On a call? Your summary can read itself aloud for you.</p></fieldset>'+
@@ -529,15 +612,27 @@ S.when = function(a){
     {next:'Continue', skip:'Skip for now'});
 };
 S.what = function(a){
-  var all = SYMPTOMS.concat(a.what.chips.filter(function(c){ return SYMPTOMS.indexOf(c) < 0; }));
+  var seen = {}, groupsHtml = '', hidden = 0, chips = a.what.chips;
+  SYMPTOM_GROUPS.forEach(function(g){
+    var relevant = typeMatch(g.types, a.type) && bodyMatch(g.body);
+    var hasSel = g.items.some(function(x){ return chips.indexOf(x) >= 0; });
+    if (!relevant && !hasSel && !ui.allSymptoms) { hidden++; return; }
+    var items = g.items.filter(function(x){ if (seen[x]) return false; seen[x] = 1; return true; });
+    if (!items.length) return;
+    groupsHtml += '<p class="group-label">'+esc(g.label)+'</p><div class="chips">'+items.map(function(c){ return chip(c, chips.indexOf(c) >= 0, 'toggleIn', 'what.chips|'+c); }).join('')+'</div>';
+  });
+  var own = chips.filter(function(c){ return !seen[c] && !SYMPTOM_GROUPS.some(function(g){ return g.items.indexOf(c) >= 0; }); });
+  groupsHtml += '<p class="group-label">Your own</p><div class="chips">'+own.map(function(c){ return chip(c, true, 'toggleIn', 'what.chips|'+c); }).join('')+
+    (ui.addingChip ? '' : '<button type="button" class="chip add" data-act="showAddChip">'+ic('plus',16,2.4)+'Add your own</button>')+'</div>';
+  var crisis = chips.indexOf(CRISIS_CHIP) >= 0 ? crisisBox('Thank you for telling us. That’s a really important thing to say, and we’ll put it near the top of your summary so it doesn’t get missed.') : '';
   return stepShell('what',
     '<div style="display:flex;flex-direction:column;gap:10px">'+lock('Only on this device')+h1('What’s been happening?')+'<p class="lede" style="margin:0">Say it however it comes out. You can tidy it up later, or not.</p></div>'+
-    '<div><label class="label" for="w">In your own words</label><textarea class="field" id="w" rows="4" data-bind="a.what.text" placeholder="e.g. My periods have got really heavy and the pain is worse than it used to be.">'+esc(a.what.text)+'</textarea>'+
+    '<div><label class="label" for="w">In your own words</label><textarea class="field" id="w" rows="4" data-bind="a.what.text" placeholder="'+(isMind(a) ? 'e.g. I haven’t felt like myself for a few months. I’m tired all the time and can’t switch off.' : 'e.g. It started a few weeks ago and it’s been getting worse.')+'">'+esc(a.what.text)+'</textarea>'+
     '<p class="help">Tip: tap the microphone on your keyboard to talk instead of typing.</p></div>'+
-    '<fieldset><legend class="label">Or tap anything that fits</legend><div class="chips">'+
-      all.map(function(c){ return chip(c, a.what.chips.indexOf(c) >= 0, 'toggleIn', 'what.chips|'+c); }).join('')+
-      (ui.addingChip ? '' : '<button type="button" class="chip add" data-act="showAddChip">'+ic('plus',16,2.4)+'Add your own</button>')+
-    '</div>'+(ui.addingChip ? '<div class="row" style="margin-top:10px"><label class="sr-only" for="newChip">Add your own symptom</label><input class="field" id="newChip" type="text" data-bind="ui.newChip" data-enter="addChip" placeholder="Describe it in a few words">'+btn(ic('plus',22,2.2),'addChip',null,'icon-btn filled',' aria-label="Add symptom" style="width:50px;height:50px;border-radius:14px"')+'</div>' : '')+'</fieldset>',
+    crisis+
+    '<fieldset><legend class="label">Or tap anything that fits</legend>'+groupsHtml+
+    (hidden && !ui.allSymptoms ? btn('Show more symptoms','showAll','allSymptoms','text-btn',' style="padding:0;margin-top:8px"') : '')+
+    (ui.addingChip ? '<div class="row" style="margin-top:10px"><label class="sr-only" for="newChip">Add your own symptom</label><input class="field" id="newChip" type="text" data-bind="ui.newChip" data-enter="addChip" placeholder="Describe it in a few words">'+btn(ic('plus',22,2.2),'addChip',null,'icon-btn filled',' aria-label="Add symptom" style="width:50px;height:50px;border-radius:14px"')+'</div>' : '')+'</fieldset>',
     {skip:'Skip symptoms'});
 };
 S.timing = function(a){
@@ -546,7 +641,7 @@ S.timing = function(a){
     h1('When did it start, and how often?')+
     '<fieldset><legend class="label">When did you first notice it?</legend><div class="chips">'+SINCE.map(function(x){ return chip(x, t.since===x, 'setVal', 'timing.since|'+x); }).join('')+'</div>'+
     '<label class="label" for="r" style="margin-top:14px;font-weight:600">Roughly when? <span class="opt">(optional)</span></label><input class="field" id="r" type="text" data-bind="a.timing.roughly" value="'+esc(t.roughly)+'" placeholder="e.g. around last summer"></fieldset>'+
-    '<fieldset><legend class="label">How often does it happen?</legend><div class="chips">'+OFTEN.map(function(x){ return chip(x, t.often===x, 'setVal', 'timing.often|'+x); }).join('')+'</div></fieldset>'+
+    '<fieldset><legend class="label">How often does it happen?</legend><div class="chips">'+OFTEN.filter(function(x){ return x !== 'With my period' || bodyMatch(['periods']) || t.often === x; }).map(function(x){ return chip(x, t.often===x, 'setVal', 'timing.often|'+x); }).join('')+'</div></fieldset>'+
     '<fieldset><legend class="label">Is it changing?</legend><div class="seg">'+TREND.map(function(x){ return '<button type="button" aria-pressed="'+(t.trend===x)+'" data-act="setVal" data-arg="timing.trend|'+x+'">'+x+'</button>'; }).join('')+'</div></fieldset>'+
     '<p class="tip">A rough idea is plenty. No need to be exact.</p>',
     {skip:'Skip this question'});
@@ -557,13 +652,16 @@ function scale(path, val, label){
   return '<fieldset><legend class="label">'+label+'</legend><div class="scale">'+b+'</div><div class="scale-ends" aria-hidden="true"><span>Barely there</span><span>Worst I’ve felt</span></div><p class="scale-word">'+(val ? val+' of 5 · '+SEV[val] : '')+'</p></fieldset>';
 }
 S.severity = function(a){
-  var s = a.severity;
+  var s = a.severity, mind = isMind(a);
+  var keep = function(sel){ return function(x){ return x !== 'Around my period' || bodyMatch(['periods']) || sel.indexOf(x) >= 0; }; };
+  var helpList = (mind ? HELPS_MIND : HELPS).filter(keep(s.helps)), worseList = (mind ? WORSE_MIND : WORSE).filter(keep(s.worse));
+  s.helps.concat(s.worse).forEach(function(x){ if (helpList.indexOf(x) < 0 && s.helps.indexOf(x) >= 0) helpList.push(x); if (worseList.indexOf(x) < 0 && s.worse.indexOf(x) >= 0) worseList.push(x); });
   return stepShell('severity',
     '<div>'+h1('How bad does it get?')+'<p class="lede">Describe your bad days honestly. That’s often what clinicians most need to hear.</p></div>'+
     scale('severity.typical', s.typical, 'On a typical day')+
     scale('severity.bad', s.bad, 'On a bad day')+
-    '<fieldset><legend class="label">What helps, even a bit?</legend><div class="chips">'+HELPS.map(function(x){ return chip(x, s.helps.indexOf(x)>=0, 'toggleIn', 'severity.helps|'+x); }).join('')+'</div></fieldset>'+
-    '<fieldset><legend class="label">What makes it worse?</legend><div class="chips">'+WORSE.map(function(x){ return chip(x, s.worse.indexOf(x)>=0, 'toggleIn', 'severity.worse|'+x); }).join('')+'</div></fieldset>'+
+    '<fieldset><legend class="label">What helps, even a bit?</legend><div class="chips">'+helpList.map(function(x){ return chip(x, s.helps.indexOf(x)>=0, 'toggleIn', 'severity.helps|'+x); }).join('')+'</div></fieldset>'+
+    '<fieldset><legend class="label">What makes it worse?</legend><div class="chips">'+worseList.map(function(x){ return chip(x, s.worse.indexOf(x)>=0, 'toggleIn', 'severity.worse|'+x); }).join('')+'</div></fieldset>'+
     '<div><label class="label" for="so">Anything else? <span class="opt">(optional)</span></label><input class="field" id="so" type="text" data-bind="a.severity.other" value="'+esc(s.other)+'" placeholder="e.g. worse first thing in the morning"></div>',
     {skip:'Skip this question'});
 };
@@ -581,18 +679,19 @@ S.hard = function(a){
     (a.hard.length ? '<section aria-labelledby="yn"><h2 class="section-label" id="yn">Your notes</h2><div style="display:flex;flex-direction:column;gap:10px">'+notes+'</div></section>'
       : '<div style="padding:18px;border-radius:20px;border:1.5px dashed #7A5470"><p style="margin:0;font-weight:600">Nothing here yet</p><p style="margin:4px 0 0;color:#D8C6CF;font-size:.9375rem">Pick a topic and we’ll help with the words, or just start writing.</p></div>')+
     '<section aria-labelledby="tp"><h2 class="section-label" id="tp">'+(a.hard.length ? 'Add another' : 'Topics')+'</h2><div class="topics">'+
-      Object.keys(TOPICS).map(function(k){ return '<button type="button" class="'+(k==='write'?'ghost':'')+'" data-act="openTopic" data-arg="'+k+'">'+(k==='write'?ic('edit',16,2.2):'')+esc(TOPICS[k].label)+'</button>'; }).join('')+
+      topicKeys(a).map(function(k){ return '<button type="button" class="'+(k==='write'?'ghost':'')+'" data-act="openTopic" data-arg="'+k+'">'+(k==='write'?ic('edit',16,2.2):'')+esc(TOPICS[k].label)+'</button>'; }).join('')+
+    '</div>'+(!ui.allTopics && topicKeys(a).length < Object.keys(TOPICS).length ? btn('More topics','showAll','allTopics','skip',' style="margin-top:6px"') : '')+'<div>'+
     '</div></section>',
     {night:true, next:'Continue', skip:'Skip for now, that’s fine too'});
 };
 V.topic = function(){
   var d = ui.draft, t = TOPICS[d.topic] || TOPICS.write;
-  var phrases = t.phrases.length ? t.phrases.concat([HARD_WORDS]) : [];
+  var phrases = t.phrases.length ? phrasesFor(t).concat([HARD_WORDS]) : [];
   return '<div class="screen night">'+
   topbar('<button type="button" class="text-btn" data-act="closeTopic">'+ic('back')+'Topics</button>','',lock('Private'))+
   '<div class="content">'+
     '<div>'+h1(esc(t.label))+'<p class="lede">'+esc(t.reassure)+'</p></div>'+
-    (t.crisis ? '<p class="crisis">If you feel unsafe or might act on thoughts of harming yourself, call 999. You can also call NHS 111 and choose the mental health option, or Samaritans free on 116 123, any time.</p>' : '')+
+    (t.crisis ? crisisBox() : '')+
     (phrases.length ? '<section aria-labelledby="wy"><h2 class="label" id="wy">Words you could use</h2><p class="help" style="margin:-4px 0 10px">Tap to add to your note. Tap again to take it out.</p><div style="display:flex;flex-direction:column;gap:8px">'+
       phrases.map(function(p,i){ var on = (d.text||'').indexOf(p) >= 0; return '<button type="button" class="phrase" aria-pressed="'+on+'" data-act="phrase" data-arg="'+i+'">'+(on ? '<span style="color:#E7B9A3;display:flex">'+ic('check',18,2.6)+'</span>' : '<span style="color:#D8C6CF;display:flex">'+ic('plus',18,2.2)+'</span>')+'<span>“'+esc(p)+'”</span></button>'; }).join('')+
       '</div>'+(t.word ? '<p class="help" style="margin-top:12px">You might hear <strong style="color:#F5EFE6">'+t.word[0]+'</strong>. It’s just '+t.word[1]+'. You don’t need to use it.</p>' : '')+'</section>' : '')+
@@ -701,15 +800,19 @@ function clinicianBody(a){
   var shared = a.hard.filter(function(n){ return n.include; });
   var lvl = IMPACT.filter(function(r){ return a.impact[r[0]] != null && a.impact[r[0]] > 0; }).sort(function(x,y){ return a.impact[y[0]] - a.impact[x[0]]; });
   var since = t.roughly || t.since;
-  var rows = a.what.chips.map(function(c){ return '<tr><th scope="row">'+esc(c)+'</th><td>'+esc(since||'')+'</td><td>'+esc(t.often||'')+'</td></tr>'; }).join('');
+  var cols = (since ? 1 : 0) + (t.often ? 1 : 0);
+  var rows = cols ? a.what.chips.map(function(c){ return '<tr><th scope="row">'+esc(c)+'</th>'+(since?'<td>'+esc(since)+'</td>':'')+(t.often?'<td>'+esc(t.often)+'</td>':'')+'</tr>'; }).join('') : '';
+  var plainList = !cols && a.what.chips.length ? '<ul>'+a.what.chips.map(function(c){ return '<li>'+esc(c)+'</li>'; }).join('')+'</ul>' : '';
   var h = '<div><p class="hello">Hello. I’ve written a few notes so I don’t forget anything. Thank you for reading them.</p>'+
     '<p class="meta">'+[pl, typeLabel(a), a.date ? fmtDate(a.date, true) : ''].filter(Boolean).map(esc).join(' · ')+'</p></div>';
   if (main) h += '<section class="boxed"><h2>Main concern</h2><p class="main">'+esc(main)+'</p></section>';
+  if (a.what.chips.indexOf(CRISIS_CHIP) >= 0) h += '<section class="hard"><h2>Please don’t miss this</h2><p class="quote">I’ve been having thoughts of not wanting to be here.</p></section>';
   if (st.length) h += '<section><h2>What I most want to ask</h2><ol>'+st.map(function(q){ return '<li>'+esc(q.text)+'</li>'; }).join('')+'</ol></section>';
-  if (rows || a.what.text || since || t.trend) {
+  if (rows || plainList || a.what.text || since || t.trend) {
     h += '<section><h2>Symptoms</h2>';
     if (a.what.text) h += '<p class="quote" style="margin-bottom:14px">“'+esc(a.what.text)+'”</p>';
-    if (rows) h += '<table><thead><tr><th scope="col">Symptom</th><th scope="col">Since</th><th scope="col">How often</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    if (plainList) h += plainList;
+    if (rows) h += '<table><thead><tr><th scope="col">Symptom</th>'+(since?'<th scope="col">Since</th>':'')+(t.often?'<th scope="col">How often</th>':'')+'</tr></thead><tbody>'+rows+'</tbody></table>';
     else if (since || t.often) h += '<p style="margin:0">Since: '+esc(since||'not sure')+(t.often?'. How often: '+esc(t.often):'')+'.</p>';
     var dl = '';
     if (t.trend) dl += '<dt>Changing</dt><dd>'+(t.trend==='Worse'?'Getting worse':t.trend==='Better'?'Getting better':'About the same')+'</dd>';
@@ -821,7 +924,10 @@ var H = {
     go(editing ? 'settings' : 'home'); toast(editing ? 'Saved.' : (p.name ? 'Lovely to meet you, '+p.name+'.' : 'All set.'));
   },
   skipSetup: function(){ if (!db.profile) db.profile = {name:'', age:''}; db.onboarded = true; ui.setupErr=''; save(); go('home'); },
-  newAppt: function(){ var a = blankAppt(); db.appts.push(a); ui.apptId = a.id; save(); goStep('type'); },
+  newAppt: function(){ var a = blankAppt(); db.appts.push(a); ui.apptId = a.id; ui.allTypes = ui.allSymptoms = ui.allTopics = ui.crisisOpen = false; save(); goStep('type'); },
+  toggleBody: function(k){ var p = db.profile || (db.profile = {name:'', age:''}); var b = p.body || (p.body = []); var i = b.indexOf(k); if (i >= 0) b.splice(i,1); else b.push(k); save(); render(); },
+  showAll: function(k){ ui[k] = true; render(); },
+  toggleCrisis: function(){ ui.crisisOpen = !ui.crisisOpen; render(); },
   open: function(id){ ui.apptId = id; var a = cur(); goStep(a.lastStep || 'type'); },
   openSummary: function(id){ ui.apptId = id; go('summary'); },
   next: function(){ var i = STEPS.indexOf(ui.step); save(); if (i >= STEPS.length - 1) toSummary(); else goStep(STEPS[i+1]); },
@@ -838,7 +944,7 @@ var H = {
   editNote: function(id){ var n = cur().hard.filter(function(x){ return x.id === id; })[0]; if (!n) return; ui.draft = {id:n.id, topic:n.topic, text:n.text, include:n.include}; go('topic'); },
   closeTopic: function(){ ui.step = 'hard'; go('step'); },
   phrase: function(i){
-    var t = TOPICS[ui.draft.topic], list = t.phrases.concat([HARD_WORDS]), p = list[+i], txt = ui.draft.text || '';
+    var t = TOPICS[ui.draft.topic], list = phrasesFor(t).concat([HARD_WORDS]), p = list[+i], txt = ui.draft.text || '';
     if (txt.indexOf(p) >= 0) txt = txt.replace(p, '').replace(/[ \t]{2,}/g, ' ').trim(); else txt = (txt.trim() ? txt.trim() + ' ' : '') + p;
     ui.draft.text = txt; render();
   },
